@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HSK5 Sắp xếp câu</title>
+<style>
+:root{
+  --bg:#fff4ef; --panel:#ffffff; --ink:#4a2c2a; --muted:#9a7470; --line:#f6d6cc;
+  --brand:#f08a6c; --brand-deep:#e8673f; --brand-ink:#ffffff; --brand-soft:#ffe6dc;
+  --pink:#ffd6dc; --pink-soft:#fff0f2; --peach:#ffe2d1;
+  --tile:#ffffff; --tile-border:#f3b9a6; --tile-ink:#4a2c2a;
+  --zone:#fff8f5; --zone-border:#f5c4b3;
+  --done:#e8673f; --done-ink:#ffffff;
+  --ok:#2f9a62; --ok-soft:#e3f6ea; --bad:#d9455f; --bad-soft:#ffe3e8; --warn:#d9822b;
+  --shadow:0 1px 2px rgba(200,110,90,.10),0 6px 18px rgba(240,138,108,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#221817; --panel:#2d201f; --ink:#f7e6e1; --muted:#c3a29b; --line:#46302d;
+    --brand:#f39a7e; --brand-deep:#ff8a5c; --brand-ink:#2a1714; --brand-soft:#4a2e28;
+    --pink:#4b2b31; --pink-soft:#33232a; --peach:#45302a;
+    --tile:#382827; --tile-border:#7c5249; --tile-ink:#fbeee9;
+    --zone:#271c1b; --zone-border:#5a3d37;
+    --done:#ff8a5c; --done-ink:#2a1714;
+    --ok:#62d394; --ok-soft:#1e3a2b; --bad:#ff7d93; --bad-soft:#47242c; --warn:#f0a85a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#221817; --panel:#2d201f; --ink:#f7e6e1; --muted:#c3a29b; --line:#46302d;
+  --brand:#f39a7e; --brand-deep:#ff8a5c; --brand-ink:#2a1714; --brand-soft:#4a2e28;
+  --pink:#4b2b31; --pink-soft:#33232a; --peach:#45302a;
+  --tile:#382827; --tile-border:#7c5249; --tile-ink:#fbeee9;
+  --zone:#271c1b; --zone-border:#5a3d37;
+  --done:#ff8a5c; --done-ink:#2a1714;
+  --ok:#62d394; --ok-soft:#1e3a2b; --bad:#ff7d93; --bad-soft:#47242c; --warn:#f0a85a;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+.zh{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","SimHei",sans-serif}
+
+/* top bar */
+.bar{background:linear-gradient(90deg,#ffc2cc 0%,#ffb59a 100%);color:#5a2a22;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(240,138,108,.18)}
+.bar-in{max-width:1440px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.bar h1{font-size:17px;margin:0;font-weight:800}
+.bar .sub{font-size:13px;opacity:.8}
+.btn{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:10px;font-size:15px}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand-deep);color:#fff;border-color:var(--brand-deep);font-weight:700}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* 3-column layout */
+.layout{max-width:1440px;margin:0 auto;padding:16px;display:grid;grid-template-columns:240px minmax(0,1fr) 250px;gap:16px;align-items:start}
+.panel{background:var(--panel);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
+
+/* left: list of tests */
+.left{position:sticky;top:72px;max-height:calc(100vh - 88px);overflow:auto;padding:12px}
+.left h3,.right h3{margin:4px 6px 8px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.dlist{display:grid;gap:4px;margin-bottom:12px}
+.ditem{width:100%;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;border:1px solid transparent;background:transparent;border-radius:10px;padding:7px 9px}
+.ditem:hover{background:var(--pink-soft)}
+.ditem.active{background:var(--peach);border-color:var(--brand)}
+.ditem .num{flex:none;width:30px;height:30px;border-radius:9px;background:var(--pink);display:grid;place-items:center;font-weight:800;font-size:13px}
+.ditem.active .num{background:var(--brand-deep);color:#fff}
+.ditem .txt{flex:1;min-width:0;line-height:1.25}
+.ditem .t1{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.ditem .t2{font-size:12px;color:var(--muted)}
+.ditem .bs{flex:none;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--zone);color:var(--muted)}
+.ditem .bs.good{background:var(--ok-soft);color:var(--ok)}
+.ditem .bs.mid{background:var(--brand-soft);color:var(--warn)}
+
+/* center */
+.center{display:grid;gap:14px;min-width:0}
+.welcome{padding:28px 26px}
+.welcome h2{margin:0 0 8px;font-size:24px}
+.welcome p{margin:6px 0;color:var(--muted)}
+.welcome .hint{margin-top:16px;padding:12px 14px;background:var(--pink-soft);border-radius:12px;color:var(--ink)}
+.qcard{padding:20px}
+.qhead{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.qno{font-size:22px;font-weight:800;color:var(--brand-deep)}
+.qlabel{color:var(--muted);font-size:14px}
+.example{font-size:14px;color:var(--muted);background:var(--zone);border:1px dashed var(--zone-border);border-radius:10px;padding:8px 12px;margin:8px 0 14px}
+.example .zh{color:var(--ink)}
+.lbl{font-size:13px;color:var(--muted);margin:12px 0 6px;font-weight:700}
+.pool,.answer{min-height:64px;border-radius:12px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;transition:background .15s,border-color .15s}
+.pool{background:var(--zone);border:1.5px dashed var(--zone-border)}
+.answer{background:var(--panel);border:2px solid var(--zone-border);min-height:76px;position:relative}
+.answer.empty::after{content:"Kéo các từ vào đây theo đúng thứ tự (hoặc chạm vào từ)";color:var(--muted);font-size:14px;position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);pointer-events:none}
+.pool.hot,.answer.hot{border-color:var(--brand-deep);background:var(--brand-soft)}
+.tile{touch-action:none;user-select:none;-webkit-user-select:none;background:var(--tile);color:var(--tile-ink);border:1.5px solid var(--tile-border);border-radius:10px;padding:8px 13px;font-size:20px;line-height:1.2;box-shadow:0 2px 0 var(--line);cursor:grab}
+.tile:hover{border-color:var(--brand-deep)}
+.answer .tile{background:var(--peach)}
+.tile.dragging{opacity:.3}
+.tile.ins-before{box-shadow:-5px 0 0 -1px var(--brand-deep)}
+.answer.ins-end::before{content:"";width:3px;align-self:stretch;background:var(--brand-deep);border-radius:2px;order:999}
+.locked .tile{cursor:default}
+.ghost{position:fixed;pointer-events:none;z-index:100;transform:translate(-50%,-50%) rotate(-2deg);box-shadow:0 8px 22px rgba(200,90,60,.3);cursor:grabbing}
+.qtools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:flex-end}
+.example-card{padding:14px 20px}
+.example-card .example{margin:8px 0}
+.muted-s{font-size:13.5px;color:var(--muted)}
+.qcard{scroll-margin-top:80px}
+.qcard.answered{border-color:var(--done)}
+.qcard.answered .qno{background:var(--done);color:#fff;border-radius:8px;padding:0 8px}
+.dur{display:flex;gap:4px;justify-content:center;margin-top:8px}
+.dur button{white-space:nowrap;border:1px solid var(--zone-border);background:var(--panel);border-radius:999px;padding:3px 9px;font-size:12.5px;font-weight:600}
+.dur button.on{background:var(--brand-deep);border-color:var(--brand-deep);color:#fff}
+.dur button:disabled{opacity:.5;cursor:default}
+
+/* right: status */
+.right{position:sticky;top:72px;padding:14px}
+.timerbox{text-align:center;padding:12px;border-radius:12px;background:var(--pink-soft);margin-bottom:12px}
+.timerbox .k{font-size:12.5px;color:var(--muted)}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:32px;line-height:1.2;color:var(--brand-deep)}
+.timer.over{color:var(--bad)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{border-radius:12px;padding:10px;text-align:center;border:1px solid var(--line)}
+.stat b{display:block;font-size:24px;line-height:1.1}
+.stat span{font-size:12.5px;color:var(--muted)}
+.stat.done{background:var(--done);border-color:var(--done)}
+.stat.done b,.stat.done span{color:var(--done-ink)}
+.stat.todo{background:var(--panel)}
+.qnav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.qn{border:1.5px solid var(--zone-border);background:#fff;color:#4a2c2a;border-radius:9px;padding:7px 0;font-weight:700;font-size:14px}
+.qn.done{background:var(--done);border-color:var(--done);color:#fff}
+.qn.cur{outline:2.5px solid var(--brand);outline-offset:2px}
+.qn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.qn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.legend{margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px;border:1px solid var(--zone-border)}
+.right .btn{width:100%;margin-top:10px}
+
+/* results */
+.score{padding:18px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:linear-gradient(90deg,var(--pink-soft),var(--brand-soft))}
+.score .big{font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--brand-deep)}
+.score .big small{font-size:22px;color:var(--muted);font-weight:600}
+.score .msg{flex:1;min-width:200px}
+.score .msg b{font-size:17px}
+.score .msg div{color:var(--muted);font-size:14px}
+.rcard{padding:14px 16px;border-left:6px solid var(--line)}
+.rcard.ok{border-left-color:var(--ok)}
+.rcard.bad{border-left-color:var(--bad)}
+.rtop{display:flex;align-items:center;gap:10px}
+.rtop .qno{font-size:18px}
+.pill{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.rrow{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;margin-top:8px;font-size:15px}
+.rrow .k{color:var(--muted);font-size:13.5px;padding-top:3px}
+.rrow .v.zh{font-size:19px}
+.rrow .v.user-bad{color:var(--bad);text-decoration:line-through;text-decoration-thickness:1px}
+.rrow .v.correct{color:var(--ok);font-weight:600}
+.alt{font-size:13px;color:var(--muted);font-weight:400}
+.expl{margin-top:10px;background:var(--pink-soft);border-radius:10px;padding:10px 12px;font-size:14.5px}
+.expl b{color:var(--brand-deep)}
+.hide{display:none!important}
+.histbtn{width:100%;margin-bottom:12px;background:var(--brand-deep);color:#fff;border-color:var(--brand-deep);font-weight:700}
+.histbtn.on{outline:2.5px solid var(--brand);outline-offset:2px}
+.hist{padding:18px 20px;min-width:0}
+.hist h2{margin:0 0 4px;font-size:21px}
+.hist .note{font-size:13px;color:var(--muted);margin:0 0 12px}
+.htools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.htools select{font:inherit;font-size:14.5px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.htools .sp{flex:1}
+.hsum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.hsum div{background:var(--pink-soft);border-radius:12px;padding:10px;text-align:center}
+.hsum b{display:block;font-size:22px;color:var(--brand-deep);line-height:1.2}
+.hsum span{font-size:12.5px;color:var(--muted)}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.ht{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+.ht th{background:var(--peach);text-align:left;padding:9px 10px;font-size:13px;white-space:nowrap}
+.ht td{padding:8px 10px;border-top:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ht tr:nth-child(even) td{background:var(--zone)}
+.ht td.num{text-align:right}
+.ht th.num{text-align:right}
+.sc{font-weight:700;padding:1px 8px;border-radius:999px}
+.sc.good{background:var(--ok-soft);color:var(--ok)}
+.sc.mid{background:var(--brand-soft);color:var(--warn)}
+.sc.low{background:var(--bad-soft);color:var(--bad)}
+.hempty{padding:24px;text-align:center;color:var(--muted)}
+.mini{padding:14px 18px}
+.mini h3{margin:0 0 10px;font-size:17px}
+table.rt{border-collapse:collapse;width:100%;font-size:15.5px;min-width:520px}
+.rt th{text-align:left;padding:10px 12px;font-size:15px;border:1px solid var(--line);background:var(--panel)}
+.rt td{padding:10px 12px;border:1px solid var(--line);vertical-align:top;background:var(--zone);font-variant-numeric:tabular-nums}
+.rt .when{font-size:15.5px}
+.rt .when small{color:var(--muted);font-size:13px;margin-left:4px}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.tag{background:#f5b45f;color:#fff;font-size:12.5px;font-weight:700;padding:2px 8px;border-radius:5px}
+.tag.mock{background:#f08a6c}
+.tag.n{background:#e9a3b0}
+.tag.auto{background:var(--bad)}
+.rt .res b{font-size:16.5px}
+.rt .res small{display:block;color:var(--muted);font-size:12.5px}
+.rt a.detail{color:var(--brand-deep);font-weight:600;text-decoration:none;cursor:pointer}
+.rt a.detail:hover{text-decoration:underline}
+.rt .muted{color:var(--muted);font-size:13px}
+.backbtn{margin-bottom:10px}
+.center>section,#examArea>*,#reviewView>*{min-width:0}
+@media (max-width:760px){table.rt{min-width:440px;font-size:14.5px}.rt th,.rt td{padding:8px}}
+@media (max-width:760px){.hsum{grid-template-columns:repeat(2,1fr)} .histbtn{margin-bottom:8px}}
+
+@media (max-width:1100px){
+  .layout{grid-template-columns:220px minmax(0,1fr)}
+  .right{grid-column:2;position:static;order:-1}
+  .left{grid-row:1 / span 3}
+}
+@media (max-width:760px){
+  .layout{grid-template-columns:minmax(0,1fr);padding:12px}
+  .hist{padding:14px}
+  .left{position:static;max-height:none;grid-row:auto}
+  .left h3{display:none}
+  .dlist{display:flex;overflow-x:auto;gap:6px;margin:0;padding-bottom:4px}
+  .dlist + h3 + .dlist{margin-top:6px}
+  .ditem{width:auto;flex:none;flex-direction:column;gap:2px;padding:6px 8px;border-color:var(--line)}
+  .ditem .txt,.ditem .bs{display:none}
+  .right{grid-column:auto;order:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+  .right.hide{display:none}
+  .center{order:2}
+  .right h3,.right .qnav,.right .legend,.right .btn{grid-column:1 / -1}
+  .right .timerbox,.right .stats{margin:0;grid-column:1 / -1}
+  .right .timerbox{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .right .dur{margin:0}
+  .right .timerbox{padding:6px}
+  .right .stat{padding:6px}
+  .right .stat b{font-size:20px}
+  .right .btn{margin-top:2px}
+  .qnav{grid-template-columns:repeat(8,1fr)}
+  .tile{font-size:18px;padding:7px 11px}
+  .rrow{grid-template-columns:1fr}
+  .rrow .k{padding-top:0}
+  .bar .sub{display:none}
+  .qtools .sp{display:none}
+  .qtools .btn{flex:1;padding:8px 6px;font-size:14px}
+  .answer.empty::after{font-size:13px}
+  .timer{font-size:26px}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-in">
+    <div>
+      <h1 class="zh">HSK（五级）书写 · 完成句子</h1>
+      <div class="sub" id="barSub">25天攻克新HSK5级写作 — 25 đề · 200 câu sắp xếp</div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT: list of tests -->
+  <nav class="panel left" aria-label="Danh sách đề">
+    <button class="btn histbtn" id="histBtn">📊 Bảng kết quả</button>
+    <h3>Ngày 1–10 · Luyện tập</h3>
+    <div class="dlist" id="listA"></div>
+    <h3>Ngày 11–25 · Đề thi thử</h3>
+    <div class="dlist" id="listB"></div>
+  </nav>
+
+  <!-- CENTER -->
+  <main class="center" id="center">
+    <section class="panel welcome" id="welcome">
+      <h2>Luyện phần Sắp xếp câu – HSK 5</h2>
+      <p>Mỗi đề gồm 8 câu (91–98), mỗi câu 5 điểm, tổng <b>40 điểm</b>. Thời gian làm bài mặc định 15 phút/đề, có thể chọn 10, 15 hoặc 20 phút ở cột bên phải; hết giờ bài sẽ tự nộp.</p>
+      <p>Kéo thả (hoặc chạm) các từ vào khung trả lời để tạo câu hoàn chỉnh. Bấm <b>Nộp bài</b> để chấm điểm, xem đáp án và giải thích ngữ pháp. Không cần thêm dấu câu.</p>
+      <div class="hint">👈 Chọn một đề ở cột bên trái để bắt đầu.</div>
+    </section>
+
+    <section class="panel hist hide" id="histView">
+      <h2>Bảng kết quả</h2>
+      <p class="note">Mỗi lần nộp bài được lưu lại trên trình duyệt của máy này.</p>
+      <div class="htools">
+        <select id="hFilter" aria-label="Lọc theo đề"></select>
+        <span class="sp"></span>
+        <button class="btn" id="hCsv">⬇ Tải CSV</button>
+        <button class="btn" id="hClear">Xóa lịch sử</button>
+      </div>
+      <div class="hsum" id="hSum"></div>
+      <div id="hTable"></div>
+    </section>
+
+    <section id="reviewView" class="hide" style="display:grid;gap:14px">
+      <div class="panel mini" id="reviewHead"></div>
+      <div id="reviewScore" class="panel score"></div>
+      <div id="reviewCards" style="display:grid;gap:14px"></div>
+    </section>
+
+    <section id="examArea" class="hide" style="display:grid;gap:14px">
+      <div id="scoreBox" class="panel score hide"></div>
+      <div class="panel mini hide" id="miniHist"></div>
+      <div class="panel example-card" id="exampleCard">
+        <div class="zh" style="font-weight:700">第一部分 · 完成句子</div>
+        <div class="example">Ví dụ: <span class="zh">发表　这篇论文　什么时候　是　的</span> → <span class="zh">这篇论文是什么时候发表的？</span></div>
+        <div class="muted-s">Kéo (hoặc chạm) các từ vào khung trả lời. Có thể kéo lại để đổi thứ tự; chạm vào từ trong khung để trả nó về.</div>
+      </div>
+      <div id="qlist" style="display:grid;gap:14px"></div>
+      <div id="results" class="hide" style="display:grid;gap:14px"></div>
+    </section>
+  </main>
+
+  <!-- RIGHT: status -->
+  <aside class="panel right hide" id="right">
+    <h3 id="examTitle"></h3>
+    <div class="timerbox">
+      <div class="k" id="timerLbl">Thời gian còn lại</div>
+      <div class="timer" id="timer">15:00</div>
+      <div class="dur" id="durBox">
+        <button data-m="10">10 phút</button><button data-m="15">15 phút</button><button data-m="20">20 phút</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat done"><b id="nDone">0</b><span>Đã làm</span></div>
+      <div class="stat todo"><b id="nTodo">8</b><span>Chưa làm</span></div>
+    </div>
+    <div class="qnav" id="qnav"></div>
+    <div class="legend" id="legend"></div>
+    <button class="btn primary" id="submitBtn">Nộp bài</button>
+    <button class="btn hide" id="retryBtn">↻ Làm lại đề này</button>
+    <button class="btn hide" id="nextDayBtn">Đề tiếp theo →</button>
+  </aside>
+</div>
+
+<script>
+// [tiles separated by |, accepted answers separated by /, Vietnamese translation, explanation]
+const DAYS = [
+{d:1,title:"“被”字句",kind:"Luyện tập",qs:[
+["汽车|别人|开|被|他的|走了","他的汽车被别人开走了。","Xe ô tô của anh ấy bị người khác lái đi mất rồi.","Câu chữ 被: Chủ thể (他的汽车) + 被 + người thực hiện (别人) + động từ + bổ ngữ (开走了). “他的” là định ngữ đứng trước “汽车”."],
+["工人们的|采纳|公司|建议|被|已经","工人们的建议已经被公司采纳。","Kiến nghị của các công nhân đã được công ty tiếp nhận.","Phó từ “已经” đứng TRƯỚC “被”: Chủ ngữ + 已经 + 被 + 公司 + 采纳. Kết hợp cố định: 采纳建议."],
+["那本|我朋友|昨天|小说|被|借走了","那本小说昨天被我朋友借走了。/昨天那本小说被我朋友借走了。","Cuốn tiểu thuyết đó hôm qua đã bị bạn tôi mượn mất.","Trạng ngữ thời gian “昨天” đứng sau chủ ngữ hoặc đầu câu, luôn trước “被”. 那本 + 小说 (lượng từ + danh từ)."],
+["研究成果|承认|被|他的|已经|了","他的研究成果已经被承认了。","Thành quả nghiên cứu của anh ấy đã được công nhận.","Câu 被 có thể lược người thực hiện: Chủ ngữ + 已经 + 被 + V + 了."],
+["警察|他|被|小偷了|当作","他被警察当作小偷了。","Anh ấy bị cảnh sát coi là kẻ trộm.","Cấu trúc 被 + người + 当作 + B: bị ai đó coi là B."],
+["他|最优秀的|之一|教练|认为是|被","他被认为是最优秀的教练之一。","Ông ấy được cho là một trong những huấn luyện viên xuất sắc nhất.","被认为是…之一: được cho là một trong những… “之一” luôn đứng cuối cụm danh từ."],
+["他|被|说不出|话|来|问得","他被问得说不出话来。","Anh ấy bị hỏi đến mức không nói nên lời.","被 + V + 得 + bổ ngữ trạng thái. Trong “说不出话来”, tân ngữ 话 chen giữa 出 và 来 (bổ ngữ xu hướng kép)."],
+["差点儿|被|那辆车|没|他|撞倒","他差点儿没被那辆车撞倒。","Anh ấy suýt nữa thì bị chiếc xe đó tông ngã.","Phó từ và từ phủ định (差点儿没) đặt trước 被. “差点儿没 + việc không mong muốn” = suýt nữa thì (thực tế không xảy ra)."]
+]},
+{d:2,title:"“把”字句",kind:"Luyện tập",qs:[
+["预订的|把|房间|取消了|姐姐","姐姐把预订的房间取消了。","Chị gái đã hủy phòng đã đặt trước.","Câu chữ 把: S + 把 + O (预订的房间) + V + 了. Động từ trong câu 把 phải có thành phần khác đi kèm (ở đây là 了)."],
+["关掉|一定|要|电脑|下班前|把","下班前一定要把电脑关掉。","Trước khi tan làm nhất định phải tắt máy tính.","Phó từ (一定) và năng nguyện động từ (要) đứng TRƯỚC 把: 一定要 + 把 + O + V + bổ ngữ kết quả (关掉)."],
+["星期一|把|学费|办公室|你|交到","星期一你把学费交到办公室。/你星期一把学费交到办公室。","Thứ Hai bạn nộp học phí lên văn phòng nhé.","Câu 把 với 到: 把 + O + V + 到 + nơi chốn. Trạng ngữ thời gian đứng đầu câu hoặc sau chủ ngữ."],
+["淋湿了|他的|头发|把|雨水","雨水把他的头发淋湿了。","Nước mưa làm ướt tóc anh ấy.","Câu 把 với bổ ngữ kết quả: 雨水 + 把 + 他的头发 + 淋湿了."],
+["妈妈|把|让我|蛋糕|四份|切成","妈妈让我把蛋糕切成四份。","Mẹ bảo tôi cắt bánh ngọt thành bốn phần.","Câu kiêm ngữ 让 kết hợp câu 把: 妈妈让我 + 把蛋糕 + 切成 + 四份 (V + 成 + kết quả)."],
+["这两件|别|把|联系|起来|事情","别把这两件事情联系起来。","Đừng liên hệ hai việc này với nhau.","Phủ định 别 đứng trước 把. 把 + O + 联系起来 (起来 chỉ sự kết hợp/gắn lại)."],
+["我们|学习上|要把|放在|精力","我们要把精力放在学习上。","Chúng ta phải dồn sức lực vào việc học.","把 + O + 放在 + nơi chốn/phương diện: 把精力放在学习上 (dồn sức vào…)."],
+["这道难题|解答|终于|把|我|出来了","我终于把这道难题解答出来了。","Cuối cùng tôi đã giải được bài toán khó này.","Phó từ 终于 đứng trước 把; V + bổ ngữ xu hướng 出来 chỉ kết quả đạt được."]
+]},
+{d:3,title:"Câu vị ngữ động từ / tính từ",kind:"Luyện tập",qs:[
+["锻炼|可以|身体|预防|疾病","锻炼身体可以预防疾病。","Rèn luyện thân thể có thể phòng ngừa bệnh tật.","Cụm động từ 锻炼身体 làm chủ ngữ + 可以 + V (预防) + O (疾病)."],
+["公司的|规定|员工|应该遵守","员工应该遵守公司的规定。","Nhân viên nên tuân thủ quy định của công ty.","S + năng nguyện động từ (应该) + V + O. Kết hợp cố định: 遵守规定."],
+["学生|按时|完成|一定要|作业","学生一定要按时完成作业。","Học sinh nhất định phải hoàn thành bài tập đúng hạn.","Thứ tự trạng ngữ: 一定要 (phó từ + năng nguyện) → 按时 (cách thức) → V 完成 → O."],
+["父母|行为|会影响|孩子的","父母会影响孩子的行为。","Cha mẹ sẽ ảnh hưởng đến hành vi của con cái.","S + 会 + 影响 + O; “孩子的” là định ngữ của 行为."],
+["老师的|意见|这篇|论文|参考了","这篇论文参考了老师的意见。","Bài luận văn này đã tham khảo ý kiến của thầy giáo.","这篇 + 论文 làm chủ ngữ; V + 了 + định ngữ (老师的) + O."],
+["国外公司的|王芳|拒绝了|邀请","王芳拒绝了国外公司的邀请。","Vương Phương đã từ chối lời mời của công ty nước ngoài.","S + V了 + định ngữ + O. Kết hợp: 拒绝邀请."],
+["比赛|超出了|结果|大家的|想象","比赛结果超出了大家的想象。","Kết quả trận đấu vượt ngoài tưởng tượng của mọi người.","比赛结果 làm chủ ngữ; 超出 + 想象 (vượt ngoài tưởng tượng)."],
+["他|新的|已经|环境|适应了","他已经适应了新的环境。","Anh ấy đã thích nghi với môi trường mới.","S + 已经 + V了 + định ngữ + O. Kết hợp: 适应环境."]
+]},
+{d:4,title:"Câu so sánh",kind:"Luyện tập",qs:[
+["比|坐飞机|坐火车|多了|便宜","坐火车比坐飞机便宜多了。","Đi tàu hỏa rẻ hơn đi máy bay nhiều.","A 比 B + tính từ + 多了. Lưu ý: không dùng 很/非常 trước tính từ trong câu 比."],
+["比|今年夏天的|往年|气温|高五度","今年夏天的气温比往年高五度。","Nhiệt độ mùa hè năm nay cao hơn mọi năm 5 độ.","A 比 B + tính từ + mức chênh lệch cụ thể (五度)."],
+["比|电影|这部|有意思|那部|得多","这部电影比那部有意思得多。","Bộ phim này hay hơn bộ kia nhiều.","A 比 B + tính từ + 得多. Sau 那部 lược bỏ 电影."],
+["都比|别的同学|来得早|我每天","我每天都比别的同学来得早。","Ngày nào tôi cũng đến sớm hơn các bạn khác.","Phó từ 都 đứng trước 比. Có bổ ngữ trạng thái: A 比 B + V得 + tính từ."],
+["菜价|没有|市场的|超市|那么贵","市场的菜价没有超市那么贵。","Giá rau ở chợ không đắt bằng ở siêu thị.","So sánh kém: A 没有 B + 那么 + tính từ."],
+["很多学生|汉语|比英语|觉得|难学|得多","很多学生觉得汉语比英语难学得多。","Nhiều học sinh cảm thấy tiếng Trung khó học hơn tiếng Anh nhiều.","觉得 + mệnh đề so sánh: A 比 B + tính từ + 得多."],
+["比|任何言语|都|一个拥抱|温暖","一个拥抱比任何言语都温暖。","Một cái ôm ấm áp hơn bất kỳ lời nói nào.","A 比 任何… 都 + tính từ: hơn bất kỳ… nào."],
+["信仰|比|在他看来|什么|都重要","在他看来信仰比什么都重要。/信仰在他看来比什么都重要。","Theo anh ấy, niềm tin quan trọng hơn bất cứ thứ gì.","在…看来 (theo ý kiến của…) thường đặt đầu câu; A 比什么都 + tính từ."]
+]},
+{d:5,title:"Định ngữ",kind:"Luyện tập",qs:[
+["哥哥|去中国访问的|参加了|一个|代表团","哥哥参加了一个去中国访问的代表团。","Anh trai đã tham gia một đoàn đại biểu sang thăm Trung Quốc.","Thứ tự định ngữ: số lượng (一个) → cụm động từ có 的 (去中国访问的) → danh từ."],
+["他是|小男孩儿|一个|十三岁的|汉族","他是一个十三岁的汉族小男孩儿。","Cậu ấy là một cậu bé dân tộc Hán 13 tuổi.","Thứ tự định ngữ: số lượng → tuổi (十三岁的) → danh từ chỉ tính chất (汉族) → danh từ trung tâm."],
+["一所|拥有|先进技术的|大型|医院|这是","这是一所拥有先进技术的大型医院。","Đây là một bệnh viện quy mô lớn sở hữu công nghệ tiên tiến.","Định ngữ dài (拥有先进技术的) đứng trước định ngữ ngắn không có 的 (大型)."],
+["老师|机会|提供了|大量的|练习口语的|为同学们","老师为同学们提供了大量的练习口语的机会。","Thầy giáo đã cung cấp cho các bạn rất nhiều cơ hội luyện khẩu ngữ.","Giới từ ngữ 为同学们 đứng trước động từ; định ngữ: 大量的 + 练习口语的 + 机会."],
+["任务|一项|完成|正在|他们|艰巨的","他们正在完成一项艰巨的任务。","Họ đang hoàn thành một nhiệm vụ gian khổ.","正在 + V + số lượng (一项) + tính từ có 的 + danh từ."],
+["一位|行人|向这边|走来|戴着眼镜的","一位戴着眼镜的行人向这边走来。","Một người đi đường đeo kính đang đi về phía này.","Định ngữ: 一位 + 戴着眼镜的 + 行人; giới từ ngữ 向这边 trước động từ 走来."],
+["做报告的|男同志|那个|爸爸|是小李的","那个做报告的男同志是小李的爸爸。","Người đàn ông đang thuyết trình kia là bố của Tiểu Lý.","Định ngữ: chỉ thị (那个) → cụm động từ (做报告的) → danh từ. Câu A 是 B."],
+["很多|克服了|难以想象的|生活困难|大家","大家克服了很多难以想象的生活困难。","Mọi người đã vượt qua rất nhiều khó khăn trong cuộc sống khó có thể tưởng tượng.","Định ngữ: 很多 + 难以想象的 + 生活困难. Kết hợp: 克服困难."]
+]},
+{d:6,title:"Câu liên động",kind:"Luyện tập",qs:[
+["寄出去|我|信|写好后|把|邮箱|投进","我把信写好后投进邮箱寄出去。","Tôi viết thư xong thì bỏ vào hòm thư gửi đi.","Các động tác xếp theo thứ tự thời gian: 写好后 → 投进邮箱 → 寄出去. 把信 đứng trước động từ đầu tiên."],
+["回到|我|喝水|家中|坐下","我回到家中坐下喝水。","Tôi về đến nhà, ngồi xuống uống nước.","Câu liên động: các động từ sắp xếp theo trình tự xảy ra: 回到家中 → 坐下 → 喝水."],
+["排队|买票|很多人|在车站","很多人在车站排队买票。","Nhiều người xếp hàng mua vé ở nhà ga.","在 + nơi chốn đứng trước cụm liên động: 排队 (cách thức) + 买票 (mục đích)."],
+["骑车|去|超市|买菜|小红","小红骑车去超市买菜。","Tiểu Hồng đạp xe đi siêu thị mua rau.","Liên động: phương tiện (骑车) → 去 + nơi chốn → mục đích (买菜)."],
+["看望|医院|我|朋友|去|一位","我去医院看望一位朋友。","Tôi đến bệnh viện thăm một người bạn.","去 + nơi chốn + V (mục đích): 去医院 + 看望一位朋友."],
+["老师|书|走进|拿着|教室","老师拿着书走进教室。","Thầy giáo cầm sách đi vào lớp học.","V1 + 着 chỉ trạng thái đi kèm (拿着书), V2 là động tác chính (走进教室)."],
+["由于|我|家庭经济状况|不好|没机会|到国外|留学","由于家庭经济状况不好，我没机会到国外留学。/我由于家庭经济状况不好没机会到国外留学。","Do hoàn cảnh kinh tế gia đình không tốt nên tôi không có cơ hội đi du học nước ngoài.","由于 + nguyên nhân đặt đầu câu; vế sau: 没机会 + 到国外 + 留学 (liên động)."],
+["大厅服务台|请|您到|咨询|一下","请您到大厅服务台咨询一下。","Mời ngài đến quầy phục vụ ở sảnh để hỏi thông tin.","请 + người + 到 + nơi chốn + V + 一下."]
+]},
+{d:7,title:"Câu kiêm ngữ",kind:"Luyện tập",qs:[
+["爸爸|逗|大家|讲笑话|开心|常常","爸爸常常讲笑话逗大家开心。","Bố thường kể chuyện cười làm mọi người vui.","讲笑话 (cách thức) + 逗 + 大家 (kiêm ngữ) + 开心. Phó từ 常常 đứng trước động từ đầu tiên."],
+["老奶奶|叫|我们|进屋里|坐坐","老奶奶叫我们进屋里坐坐。","Bà cụ gọi chúng tôi vào nhà ngồi chơi.","Câu kiêm ngữ: A 叫 B + V: 我们 vừa là tân ngữ của 叫 vừa là chủ ngữ của 进屋里坐坐."],
+["导致|大雾天气|航班|延误","大雾天气导致航班延误。","Thời tiết sương mù dày đặc khiến chuyến bay bị hoãn.","A 导致 B + V (A dẫn đến việc B …)."],
+["老师们|表扬|很认真|他学习","老师们表扬他学习很认真。","Các thầy cô khen cậu ấy học hành rất chăm chỉ.","表扬 + người + nội dung khen (学习很认真)."],
+["大家|推荐|这次的|山本同学|参加|汉语比赛","大家推荐山本同学参加这次的汉语比赛。","Mọi người tiến cử bạn Yamamoto tham gia cuộc thi tiếng Trung lần này.","Câu kiêm ngữ: 推荐 + 山本同学 + 参加 + 这次的汉语比赛."],
+["老师|写日记|要求|我们|每天","老师要求我们每天写日记。","Thầy giáo yêu cầu chúng tôi viết nhật ký mỗi ngày.","要求 + người + (每天) + V. Trạng ngữ thời gian 每天 đứng trước 写日记."],
+["教育专家|家长|多跟|孩子|鼓励|沟通","教育专家鼓励家长多跟孩子沟通。","Chuyên gia giáo dục khuyến khích phụ huynh giao tiếp với con nhiều hơn.","鼓励 + 家长 + 多跟孩子沟通 (跟 + người + 沟通)."],
+["政府|进入|不允许|国内市场|走私产品","政府不允许走私产品进入国内市场。","Chính phủ không cho phép hàng buôn lậu thâm nhập vào thị trường trong nước.","不允许 + B + V: không cho phép B làm gì."]
+]},
+{d:8,title:"Năng nguyện động từ & tổng hợp",kind:"Luyện tập",qs:[
+["自行车|他|把|借走了|我的","他把我的自行车借走了。","Anh ấy đã mượn xe đạp của tôi đi rồi.","Câu 把: S + 把 + 我的自行车 + 借走了."],
+["重要朋友的|一定|你们|联系方式|要|记住","你们一定要记住重要朋友的联系方式。","Các bạn nhất định phải nhớ cách liên lạc của những người bạn quan trọng.","一定要 + V (记住) + định ngữ + O."],
+["病了|他|三天了|已经","他已经病了三天了。","Anh ấy đã ốm ba ngày rồi.","Bổ ngữ thời lượng: V + 了 + thời gian + 了 (vẫn đang tiếp diễn)."],
+["打印机|好了|已经|安装","打印机已经安装好了。","Máy in đã được lắp đặt xong.","Câu bị động ý nghĩa (không dùng 被): vật + 已经 + V + 好了."],
+["犯错误|是|避免|不了的","犯错误是避免不了的。","Mắc lỗi là điều không thể tránh khỏi.","是 + V + 不了 + 的: nhấn mạnh nhận định; 避免不了 là bổ ngữ khả năng."],
+["常常|上海|到|去|这个学期|他","这个学期他常常到上海去。/他这个学期常常到上海去。","Học kỳ này anh ấy thường đi Thượng Hải.","Cấu trúc 到 + nơi chốn + 去. Thời gian → phó từ tần suất → 到…去."],
+["张东|哭了|被经理|批评","张东被经理批评哭了。","Trương Đông bị giám đốc phê bình đến phát khóc.","Câu 被: S + 被 + người + V + bổ ngữ kết quả (哭了)."],
+["过来|快|你|帮|我|一下","你快过来帮我一下。","Bạn mau qua đây giúp tôi một chút.","Liên động: 快过来 (đến) + 帮我一下 (mục đích). 快 đứng trước động từ."]
+]},
+{d:9,title:"Câu chữ “有” / “是”",kind:"Luyện tập",qs:[
+["韩国人|我们|日本人|五个|有|四个|班|和","我们班有五个韩国人和四个日本人。/我们班有四个日本人和五个韩国人。","Lớp chúng tôi có năm người Hàn Quốc và bốn người Nhật Bản.","Câu chữ 有: nơi chốn/tổ chức (我们班) + 有 + số lượng + danh từ; 和 nối hai danh từ."],
+["很|食堂|好吃|有|的|饭菜|学校|里|多","学校食堂里有很多好吃的饭菜。","Trong nhà ăn của trường có rất nhiều món ăn ngon.","Nơi chốn (学校食堂里) + 有 + 很多 + 好吃的 + 饭菜."],
+["有|留学生公寓|小卖部|和|一楼|餐厅","留学生公寓一楼有小卖部和餐厅。/留学生公寓一楼有餐厅和小卖部。","Tầng một của ký túc xá lưu học sinh có cửa hàng tạp hóa và nhà ăn.","Nơi chốn + 有 + A 和 B."],
+["很多|中国|有|有名|旅游胜地|的","中国有很多有名的旅游胜地。","Trung Quốc có rất nhiều danh lam thắng cảnh nổi tiếng.","S + 有 + 很多 + tính từ + 的 + danh từ."],
+["做一个|理想|我们|有|人|的|要","我们要做一个有理想的人。","Chúng ta phải làm một người có lý tưởng.","要 + 做 + 一个 + 有理想的 + 人 (cụm 有… làm định ngữ)."],
+["姐姐|我的书包|买|是|给我|的","我的书包是姐姐给我买的。","Cặp sách của tôi là do chị gái mua cho tôi.","是…的 nhấn mạnh người thực hiện: 是 + 姐姐给我买 + 的."],
+["是|的|生产|上海|这种鞋子|在","这种鞋子是在上海生产的。","Loại giày này được sản xuất ở Thượng Hải.","是…的 nhấn mạnh nơi chốn: 是 + 在上海 + 生产 + 的."],
+["这种|治疗|新生产的|西药|是|感冒|的","这种新生产的西药是治疗感冒的。","Loại thuốc tây mới sản xuất này là để chữa cảm cúm.","是 + cụm 的 (治疗感冒的) chỉ công dụng; chủ ngữ 这种 + 新生产的 + 西药."]
+]},
+{d:10,title:"Câu tồn hiện",kind:"Luyện tập",qs:[
+["充满了|教室里|到处|欢笑声","教室里到处充满了欢笑声。","Khắp lớp học tràn ngập tiếng cười.","Câu tồn hiện: nơi chốn + 到处 + V了 + sự vật."],
+["马路对面|外国女孩|走过来|一个","马路对面走过来一个外国女孩。","Từ bên kia đường đi tới một cô gái nước ngoài.","Câu tồn hiện (xuất hiện): nơi chốn + V + bổ ngữ xu hướng + số lượng + người."],
+["一台|有|电脑|桌子|上","桌子上有一台电脑。","Trên bàn có một chiếc máy tính.","Nơi chốn (桌子上) + 有 + số lượng (一台) + danh từ."],
+["中国油画|挂着|一幅|墙上","墙上挂着一幅中国油画。","Trên tường treo một bức tranh sơn dầu Trung Quốc.","Nơi chốn + V着 + số lượng + danh từ (diễn tả trạng thái tồn tại)."],
+["海上|明月|升起了|一轮","海上升起了一轮明月。","Trên biển nhô lên một vầng trăng sáng.","Nơi chốn + V + 起了 + 一轮 (lượng từ của mặt trăng) + 明月."],
+["耸立着|人民|广场上|纪念碑","广场上耸立着人民纪念碑。","Trên quảng trường sừng sững tượng đài Nhân dân.","Nơi chốn + 耸立着 + sự vật."],
+["鸟|门洞|飞走|一只|里","门洞里飞走一只鸟。","Từ trong lỗ cửa bay đi một con chim.","Câu tồn hiện (biến mất): nơi chốn + V + 走 + số lượng + danh từ."],
+["一些|他|转变|的|思想|有了","他的思想有了一些转变。","Tư tưởng của anh ấy đã có một số thay đổi.","S (他的思想) + 有了 + 一些 + 转变."]
+]},
+{d:11,title:"模拟试题一",kind:"Đề thi thử",qs:[
+["不能|子女|逃避|抚养|的|责任|父母","父母不能逃避抚养子女的责任。","Cha mẹ không thể trốn tránh trách nhiệm nuôi dưỡng con cái.","S + 不能 + V (逃避) + O (责任). “抚养子女的” là định ngữ của 责任."],
+["好习惯|从小|他|就|养成了|饭前洗手的","他从小就养成了饭前洗手的好习惯。/从小他就养成了饭前洗手的好习惯。","Từ nhỏ anh ấy đã hình thành thói quen tốt rửa tay trước khi ăn.","从小…就…: từ nhỏ đã… Kết hợp cố định 养成…习惯; “饭前洗手的” là định ngữ."],
+["爸爸|看新闻|每天|晚上|最喜欢","爸爸每天晚上最喜欢看新闻。/每天晚上爸爸最喜欢看新闻。","Bố thích nhất là xem thời sự mỗi tối.","S + thời gian (每天晚上) + phó từ mức độ (最) + 喜欢 + tân ngữ (看新闻)."],
+["有利于|均衡的|健康|饮食|身体","均衡的饮食有利于身体健康。","Ăn uống cân bằng có lợi cho sức khỏe.","Cấu trúc A 有利于 B (A có lợi cho B). 均衡的饮食 là chủ ngữ."],
+["他|书包|把|放在|桌子上|常常","他常常把书包放在桌子上。","Anh ấy thường để cặp sách trên bàn.","Câu 把: S + phó từ (常常) + 把 + O + 放在 + nơi chốn. Phó từ tần suất đứng trước 把."],
+["他一个人|能承受|压力|到底|多大的","他一个人到底能承受多大的压力？","Một mình anh ấy rốt cuộc có thể chịu đựng áp lực lớn đến mức nào?","到底 (rốt cuộc) dùng trong câu hỏi, đứng trước 能. 多大的压力 là tân ngữ. Câu hỏi → dấu “？”."],
+["都可以|每一次失败|看作|宝贵的经历|人生","每一次失败都可以看作人生宝贵的经历。","Mỗi lần thất bại đều có thể coi là một trải nghiệm quý giá của đời người.","每…都…; A 可以看作 B (A có thể được coi là B). 人生 bổ nghĩa cho 宝贵的经历."],
+["运动|适当的|可以|身体的|机能|调节","适当的运动可以调节身体的机能。","Vận động hợp lý có thể điều tiết chức năng cơ thể.","Chủ ngữ 适当的运动 + 可以 + 调节 + 身体的机能."]
+]},
+{d:12,title:"模拟试题二",kind:"Đề thi thử",qs:[
+["委婉地|他|拒绝|大家的|邀请|了","他委婉地拒绝了大家的邀请。","Anh ấy đã khéo léo từ chối lời mời của mọi người.","Trạng ngữ cách thức “委婉地” (…地) đứng trước động từ; 拒绝 + 了 + 大家的邀请."],
+["的变化|人们|对环境|有|适应能力|很强的","人们对环境的变化有很强的适应能力。","Con người có khả năng thích nghi rất mạnh với sự thay đổi của môi trường.","对 + đối tượng + 有 + 能力: 对环境的变化 là trạng ngữ; 很强的 bổ nghĩa cho 适应能力."],
+["人们|理想|都在|为实现|而|每天|不断努力","人们每天都在为实现理想而不断努力。/每天人们都在为实现理想而不断努力。","Mỗi ngày mọi người đều đang không ngừng nỗ lực để thực hiện lý tưởng.","Cấu trúc 为…而… (vì … mà …). Thứ tự: 每天 → 都在 → 为实现理想 → 而 → 不断努力."],
+["地方|细菌|容易|产生|潮湿的","潮湿的地方容易产生细菌。","Nơi ẩm ướt dễ sinh ra vi khuẩn.","潮湿的地方 làm chủ ngữ + 容易 + 产生 + 细菌."],
+["他|下载的|不小心|把|删除了|资料","他不小心把下载的资料删除了。","Anh ấy không cẩn thận đã xóa mất tài liệu đã tải về.","Câu 把: S + 不小心 + 把 + O (下载的资料) + V + 了. Trạng ngữ đứng trước 把."],
+["扩大|多读|不同种类的书|能|知识面","多读不同种类的书能扩大知识面。","Đọc nhiều loại sách khác nhau có thể mở rộng kiến thức.","Cụm động từ làm chủ ngữ + 能 + 扩大知识面 (kết hợp cố định)."],
+["当前|生活上|解决|农民|的|困难|需要","农民当前需要解决生活上的困难。/当前农民需要解决生活上的困难。","Hiện nay nông dân cần giải quyết những khó khăn trong cuộc sống.","S + 当前 + 需要 + 解决 + 生活上的困难."],
+["主要的|大学生|就业|已经|成为|社会问题|一个","大学生就业已经成为一个主要的社会问题。","Việc làm của sinh viên đã trở thành một vấn đề xã hội chủ yếu.","Thứ tự định ngữ: số lượng (一个) → tính từ có 的 (主要的) → danh từ (社会问题)."]
+]},
+{d:13,title:"模拟试题三",kind:"Đề thi thử",qs:[
+["西瓜|两半|被|切成了|妈妈","西瓜被妈妈切成了两半。","Quả dưa hấu bị mẹ bổ làm đôi.","Câu 被: S + 被 + tác nhân + V + 成 + kết quả (切成两半)."],
+["清晨|升起的|美丽的|照亮了|太阳|把|土地","清晨升起的太阳把美丽的土地照亮了。","Mặt trời mọc lúc sáng sớm đã chiếu sáng mảnh đất xinh đẹp.","Câu 把: chủ ngữ có định ngữ (清晨升起的太阳) + 把 + 美丽的土地 + 照亮了."],
+["人生|挫折|有|因为|显得|才会|更完美","因为有挫折人生才会显得更完美。/人生因为有挫折才会显得更完美。","Vì có trắc trở nên cuộc đời mới trở nên hoàn mỹ hơn.","因为…才… nhấn mạnh nguyên nhân; 才会 + 显得 + 更完美."],
+["他的|我|汉语|水平|比|高得多","他的汉语水平比我高得多。","Trình độ tiếng Trung của anh ấy cao hơn tôi nhiều.","A 比 B + tính từ + 得多. Sau 我 lược bỏ “的汉语水平”."],
+["积累|是|失败|经验|为了|更多的","失败是为了积累更多的经验。","Thất bại là để tích lũy thêm nhiều kinh nghiệm.","是为了 (là để…) giải thích mục đích: 积累 + 更多的经验."],
+["不停地|自己的|朝着|目标|努力|他","他不停地朝着自己的目标努力。","Anh ấy không ngừng nỗ lực hướng tới mục tiêu của mình.","Trạng ngữ: cách thức (不停地) → giới từ ngữ (朝着自己的目标) → động từ 努力."],
+["下午|我让他|汇报|到办公室来|工作","我让他下午到办公室来汇报工作。/下午我让他到办公室来汇报工作。","Tôi bảo anh ấy chiều nay đến văn phòng báo cáo công việc.","Câu kiêm ngữ 让 + liên động: 到办公室来 + 汇报工作."],
+["体现了|自己的|独特|风格|这幅画|画家","这幅画体现了画家自己的独特风格。","Bức tranh này thể hiện phong cách độc đáo của chính họa sĩ.","S (这幅画) + 体现了 + 画家自己的 + 独特 + 风格."]
+]},
+{d:14,title:"模拟试题四",kind:"Đề thi thử",qs:[
+["孩子|这本书|被|已经|撕破了","这本书已经被孩子撕破了。","Cuốn sách này đã bị đứa trẻ xé rách.","Câu 被: 已经 đứng trước 被; V + bổ ngữ kết quả (撕破了)."],
+["老师|很多的|教授|给|知识|我们","老师教授给我们很多的知识。","Thầy giáo truyền dạy cho chúng tôi rất nhiều kiến thức.","Song tân ngữ: V (教授给) + người (我们) + vật (很多的知识)."],
+["那个|一旁的|态度|站在|服务员|很好","那个站在一旁的服务员态度很好。","Người phục vụ đứng bên cạnh kia thái độ rất tốt.","Câu chủ vị làm vị ngữ: chủ ngữ lớn (那个站在一旁的服务员) + 态度很好."],
+["她|丢失|自己|找到了|项链|的|两周","她找到了自己丢失两周的项链。","Cô ấy đã tìm thấy chiếc vòng cổ bị mất hai tuần của mình.","Định ngữ dài “自己丢失两周的” bổ nghĩa cho 项链."],
+["被|爸爸|报纸|垃圾筐里|那份|已经|扔到了","那份报纸已经被爸爸扔到了垃圾筐里。","Tờ báo đó đã bị bố vứt vào sọt rác.","Câu 被: 那份报纸 + 已经 + 被爸爸 + 扔到了 + nơi chốn."],
+["昨天|谈了一次|认真地|小李|在办公室里|又跟|领导","昨天小李在办公室里又跟领导认真地谈了一次。/小李昨天在办公室里又跟领导认真地谈了一次。","Hôm qua Tiểu Lý lại nói chuyện nghiêm túc với lãnh đạo một lần ở văn phòng.","Thứ tự trạng ngữ: thời gian → nơi chốn → phó từ (又) → đối tượng (跟领导) → cách thức (认真地) → V + động lượng."],
+["我们|机场|在|你|等了|小时了|好几个","我们在机场等了你好几个小时了。","Chúng tôi đã đợi bạn ở sân bay mấy tiếng đồng hồ rồi.","Bổ ngữ thời lượng: V + 了 + tân ngữ đại từ (你) + thời lượng + 了."],
+["我|告诉了|把|事情的经过|全部|她","我把事情的经过全部告诉了她。","Tôi đã kể toàn bộ diễn biến sự việc cho cô ấy.","Câu 把: 把 + 事情的经过 + 全部 + 告诉了 + 她."]
+]},
+{d:15,title:"模拟试题五",kind:"Đề thi thử",qs:[
+["虽然|很|精神上|有钱|他|但|很|空虚|却|他","虽然他很有钱但他精神上却很空虚。/他虽然很有钱但他精神上却很空虚。","Tuy anh ấy rất giàu nhưng về tinh thần lại rất trống rỗng.","Câu ghép chuyển ngoặt 虽然…但…却…; 却 đứng sau chủ ngữ/trạng ngữ ở vế sau."],
+["我的|比她|朋友中|更漂亮的了|没有","我的朋友中没有比她更漂亮的了。","Trong số bạn bè của tôi không ai xinh hơn cô ấy.","So sánh cực cấp: 没有比…更…的了 (không có ai… hơn…)."],
+["人生的|幸福|心爱的人|是可以|在一起|和自己|生活","人生的幸福是可以和自己心爱的人生活在一起。","Hạnh phúc của đời người là được sống cùng người mình yêu thương.","Câu chữ 是: 人生的幸福 + 是 + 可以 + 和…生活在一起."],
+["累倒|住院了|由于|李教授|长期熬夜|研究|终于","李教授由于长期熬夜研究终于累倒住院了。/由于长期熬夜研究李教授终于累倒住院了。","Do thường xuyên thức khuya nghiên cứu, giáo sư Lý cuối cùng đã kiệt sức phải nhập viện.","由于 + nguyên nhân + 终于 + kết quả; 累倒 → 住院 là chuỗi liên động."],
+["好消息|你|感谢|告诉|我|了|一个","感谢你告诉了我一个好消息。","Cảm ơn bạn đã báo cho tôi một tin vui.","感谢 + 你 + 告诉了 + 我 (người) + 一个好消息 (vật) — song tân ngữ."],
+["窗户|透过|房间里|月光|照到了","月光透过窗户照到了房间里。","Ánh trăng xuyên qua cửa sổ chiếu vào trong phòng.","Giới từ ngữ 透过窗户 trước động từ; 照到了 + nơi chốn."],
+["心爱的|她的|红了|见到|人|脸","见到心爱的人她的脸红了。","Gặp người mình yêu, mặt cô ấy đỏ lên.","Vế thời gian “见到心爱的人” đặt đầu câu; 她的脸红了 (了 chỉ thay đổi trạng thái)."],
+["我|写好的|终于|把|毕业论文|导师|交给了","我终于把写好的毕业论文交给了导师。","Cuối cùng tôi đã nộp luận văn tốt nghiệp đã viết xong cho giáo viên hướng dẫn.","Câu 把: S + 终于 + 把 + O + 交给了 + người nhận."]
+]},
+{d:16,title:"模拟试题六",kind:"Đề thi thử",qs:[
+["的时候|洋溢着|春节|气氛|到处|欢乐的","春节的时候到处洋溢着欢乐的气氛。","Vào dịp Tết, khắp nơi tràn ngập không khí vui tươi.","Câu tồn hiện: thời gian + 到处 + 洋溢着 + 欢乐的气氛."],
+["上个月|那幢|这是|买的|我们|房子","这是我们上个月买的那幢房子。","Đây là ngôi nhà mà chúng tôi mua tháng trước.","这是 + định ngữ (我们上个月买的) + 那幢 + 房子."],
+["汉语|男人|我们的|老师|那个|穿夹克的|是","那个穿夹克的男人是我们的汉语老师。","Người đàn ông mặc áo khoác kia là thầy dạy tiếng Trung của chúng tôi.","A 是 B. Chủ ngữ: 那个 + 穿夹克的 + 男人."],
+["为了|跑步|身体|他每天|健康|坚持","为了身体健康他每天坚持跑步。","Để có sức khỏe, mỗi ngày anh ấy kiên trì chạy bộ.","为了 + mục đích đặt đầu câu; 坚持 + V (跑步)."],
+["她|被|感动得|那部|眼泪|电影|都流出来了","她被那部电影感动得眼泪都流出来了。","Cô ấy bị bộ phim đó làm cảm động đến mức nước mắt chảy ra.","Câu 被 + bổ ngữ trạng thái: 被 + tác nhân + V得 + kết quả."],
+["音乐厅里|听众|坐满了|来自|各国的","音乐厅里坐满了来自各国的听众。","Trong phòng hòa nhạc chật kín khán giả đến từ các nước.","Câu tồn hiện: nơi chốn + 坐满了 + 来自各国的 + 听众."],
+["很多人|健康|认为|财富|更重要|比","很多人认为健康比财富更重要。","Nhiều người cho rằng sức khỏe quan trọng hơn của cải.","认为 + mệnh đề so sánh A 比 B 更 + tính từ."],
+["他|不到|带的|钱|就都|一个月|花光了","他带的钱不到一个月就都花光了。","Số tiền anh ấy mang theo chưa đầy một tháng đã tiêu hết sạch.","不到 + thời gian + 就 (chỉ sự sớm/nhanh) + 都 + 花光了."]
+]},
+{d:17,title:"模拟试题七",kind:"Đề thi thử",qs:[
+["听|我们|轻音乐|可以让|情绪|紧张的|舒缓|下来","听轻音乐可以让我们紧张的情绪舒缓下来。","Nghe nhạc nhẹ có thể làm tâm trạng căng thẳng của chúng ta dịu lại.","Chủ ngữ là cụm động từ 听轻音乐; câu kiêm ngữ 让 + … + 舒缓下来."],
+["大雁|天空中|一群|蔚蓝的|有|飞过","蔚蓝的天空中有一群大雁飞过。","Trên bầu trời xanh thẳm có một đàn nhạn bay qua.","Câu tồn hiện với 有 + liên động: nơi chốn + 有 + 一群大雁 + 飞过."],
+["珍藏着|衣柜里|白毛衣|一件","衣柜里珍藏着一件白毛衣。","Trong tủ quần áo cất giữ một chiếc áo len trắng.","Câu tồn hiện: nơi chốn + V着 + số lượng + danh từ."],
+["老师|他|学习|不努力|批评","老师批评他学习不努力。","Thầy giáo phê bình cậu ấy học hành không chăm chỉ.","批评 + người + nội dung (学习不努力)."],
+["她是|优秀的|经验|一位|有|女教练|20多年|的","她是一位优秀的有20多年经验的女教练。/她是一位有20多年经验的优秀的女教练。","Cô ấy là một nữ huấn luyện viên xuất sắc có hơn 20 năm kinh nghiệm.","Nhiều tầng định ngữ: 一位 + 优秀的 + 有20多年经验的 + 女教练."],
+["我|将|开会的|材料|已经|整理|好了","我已经将开会的材料整理好了。","Tôi đã sắp xếp xong tài liệu cuộc họp.","将 = 把 (văn viết): S + 已经 + 将 + O + V + 好了."],
+["教育|事业|他把|自己的|完全|一生|奉献给了","他把自己的一生完全奉献给了教育事业。","Ông ấy đã cống hiến trọn đời mình cho sự nghiệp giáo dục.","Câu 把: 把 + 自己的一生 + 完全 + 奉献给了 + 教育事业."],
+["汤姆|鞭子|父亲|大麦秆|做的|用|被|拿走了","父亲用大麦秆做的鞭子被汤姆拿走了。","Cái roi bố làm bằng thân lúa mạch đã bị Tom lấy đi.","Chủ ngữ có định ngữ dài (父亲用大麦秆做的) + 鞭子 + 被汤姆 + 拿走了."]
+]},
+{d:18,title:"模拟试题八",kind:"Đề thi thử",qs:[
+["计划|的|打乱了|被|秋游|考试|突如其来","秋游计划被突如其来的考试打乱了。","Kế hoạch dã ngoại mùa thu bị kỳ thi bất ngờ làm xáo trộn.","Câu 被: 秋游计划 + 被 + 突如其来的考试 + 打乱了."],
+["夏日的|孩子们的|把|太阳|照得|脸|红彤彤的","夏日的太阳把孩子们的脸照得红彤彤的。","Mặt trời mùa hè chiếu làm khuôn mặt bọn trẻ đỏ hồng.","Câu 把 + bổ ngữ trạng thái: 把 + O + V得 + 红彤彤的."],
+["义务|公民|交通|是|遵守|规则|每个|应尽的","遵守交通规则是每个公民应尽的义务。","Tuân thủ luật giao thông là nghĩa vụ mà mỗi công dân phải thực hiện.","Cụm động từ làm chủ ngữ + 是 + 每个公民应尽的 + 义务."],
+["闪烁着|夜空|繁星|浩瀚的|点点","浩瀚的夜空闪烁着点点繁星。","Bầu trời đêm bao la lấp lánh muôn vàn vì sao.","Câu tồn hiện: nơi chốn (浩瀚的夜空) + 闪烁着 + 点点繁星."],
+["一位|精神|李明|有着|是|努力拼搏|好学生|的","李明是一位有着努力拼搏精神的好学生。","Lý Minh là một học sinh giỏi có tinh thần nỗ lực phấn đấu.","A 是 B; định ngữ 有着努力拼搏精神的 đặt giữa 一位 và 好学生."],
+["广场|附近|超市|新开了|一家|连锁|大型的","广场附近新开了一家大型的连锁超市。","Gần quảng trường mới mở một siêu thị chuỗi quy mô lớn.","Câu tồn hiện (xuất hiện): nơi chốn + 新开了 + 一家 + 大型的 + 连锁 + 超市."],
+["粗心|导致|一大笔|单位|他的|生意|损失了","他的粗心导致单位损失了一大笔生意。","Sự cẩu thả của anh ấy khiến đơn vị mất một vụ làm ăn lớn.","A 导致 B + V. 他的粗心 làm chủ ngữ."],
+["现实|比|理想|残酷|总是|一些","现实总是比理想残酷一些。","Hiện thực luôn tàn khốc hơn lý tưởng một chút.","Phó từ 总是 đứng trước 比; A 比 B + tính từ + 一些."]
+]},
+{d:19,title:"模拟试题九",kind:"Đề thi thử",qs:[
+["记录着|日记里|点点滴滴|生活的|他","日记里记录着他生活的点点滴滴。","Trong nhật ký ghi lại từng chút một cuộc sống của anh ấy.","Câu tồn hiện: nơi chốn + 记录着 + 他生活的点点滴滴."],
+["拼搏|赛跑|人生|每一秒|就像|都要","人生就像赛跑每一秒都要拼搏。","Đời người giống như cuộc chạy đua, mỗi giây đều phải phấn đấu.","A 就像 B (so sánh ví von); 每一秒都要 + V."],
+["老师|说话|那个人|英语|刚才|以前的|跟你|的|是我们","刚才跟你说话的那个人是我们以前的英语老师。","Người vừa nói chuyện với bạn là thầy dạy tiếng Anh trước đây của chúng tôi.","Định ngữ dài (刚才跟你说话的) + 那个人 làm chủ ngữ; 是 + 我们以前的英语老师."],
+["他|毕业|决定|一|马上|找工作|就|去","他决定一毕业马上就去找工作。/他决定一毕业就马上去找工作。","Anh ấy quyết định vừa tốt nghiệp là đi tìm việc ngay.","一…就… (vừa… là…); 决定 + mệnh đề."],
+["不小心|他|借给|把我|书|他的|弄丢了","他不小心把我借给他的书弄丢了。","Anh ấy không cẩn thận làm mất cuốn sách tôi cho anh ấy mượn.","Câu 把: 不小心 + 把 + (我借给他的书) + 弄丢了."],
+["拥有|只有|珍惜|的人|懂得|才会|幸福","只有懂得珍惜的人才会拥有幸福。","Chỉ những người biết trân trọng mới có được hạnh phúc.","只有…才… (chỉ có… mới…)."],
+["一系列的|通过|找到了|办法|努力|他|终于|解决","通过一系列的努力他终于找到了解决办法。/他通过一系列的努力终于找到了解决办法。","Thông qua một loạt nỗ lực, cuối cùng anh ấy đã tìm ra cách giải quyết.","通过 + phương thức; 终于 + 找到了 + 解决办法."],
+["坚持|感谢你|下去|给了我|的|勇气","感谢你给了我坚持下去的勇气。","Cảm ơn bạn đã cho tôi dũng khí để tiếp tục kiên trì.","给 + 我 + 勇气 (song tân ngữ); 坚持下去的 là định ngữ (下去 = tiếp tục)."]
+]},
+{d:20,title:"模拟试题十",kind:"Đề thi thử",qs:[
+["交流|我们|相互|观点|学术","我们相互交流学术观点。","Chúng tôi trao đổi quan điểm học thuật với nhau.","Phó từ 相互 đứng trước động từ 交流; 学术观点 là tân ngữ."],
+["对未来|他们|信心|充满了","他们对未来充满了信心。","Họ tràn đầy niềm tin vào tương lai.","Kết hợp cố định 对…充满信心."],
+["作业|时候|交的|这份|什么|是","这份作业是什么时候交的？","Bài tập này nộp lúc nào?","是…的 nhấn mạnh thời gian: 是 + 什么时候 + 交 + 的. Câu hỏi → “？”."],
+["学习的|可以|缓解|压力|看电视","看电视可以缓解学习的压力。","Xem tivi có thể giảm bớt áp lực học tập.","Cụm động từ làm chủ ngữ; 缓解压力 là kết hợp cố định."],
+["是|爸爸|性格|一位|开朗的人","爸爸是一位性格开朗的人。","Bố là một người có tính cách cởi mở.","A 是 B; định ngữ chủ-vị: 性格开朗的 + 人."],
+["她|很好的|教育|接受过","她接受过很好的教育。","Cô ấy đã được hưởng một nền giáo dục rất tốt.","V + 过 (kinh nghiệm) + O; kết hợp 接受教育."],
+["著名的|那所|她|大学|考上了","她考上了那所著名的大学。","Cô ấy đã thi đỗ vào trường đại học nổi tiếng đó.","考上了 + 那所 + 著名的 + 大学."],
+["气候|比|上海|北京的|干燥","北京的气候比上海干燥。","Khí hậu Bắc Kinh khô hơn Thượng Hải.","A 比 B + tính từ; sau 上海 lược “的气候”."]
+]},
+{d:21,title:"模拟试题十一",kind:"Đề thi thử",qs:[
+["我被|批评|昨天|哭了|老师","昨天我被老师批评哭了。","Hôm qua tôi bị thầy phê bình đến phát khóc.","Câu 被: thời gian + 我被 + 老师 + 批评 + 哭了 (bổ ngữ kết quả)."],
+["我|友情|觉得|比|什么|都珍贵","我觉得友情比什么都珍贵。","Tôi thấy tình bạn quý giá hơn bất cứ thứ gì.","A 比什么都 + tính từ (hơn mọi thứ)."],
+["电话|打|一直|不通|老师的","老师的电话一直打不通。","Điện thoại của thầy cứ gọi mãi không được.","Chủ đề (老师的电话) + 一直 + V + 不通 (bổ ngữ khả năng phủ định)."],
+["我们|你的|很感动|让|行为","你的行为让我们很感动。","Hành động của bạn khiến chúng tôi rất cảm động.","Câu kiêm ngữ: A 让 B + trạng thái."],
+["请|签一下|你的|重新|名字","请重新签一下你的名字。","Xin vui lòng ký lại tên của bạn.","请 + 重新 + V + 一下 + O."],
+["是|世界|万里长城|奇迹|建筑的","万里长城是世界建筑的奇迹。","Vạn Lý Trường Thành là kỳ tích kiến trúc của thế giới.","A 是 B; 世界建筑的 + 奇迹."],
+["班长|打算|老师|邀请|聚会|参加","班长打算邀请老师参加聚会。","Lớp trưởng định mời thầy giáo tham gia buổi họp mặt.","打算 + câu kiêm ngữ 邀请 + 老师 + 参加聚会."],
+["很便宜|十块钱|玫瑰花|一朵","玫瑰花很便宜十块钱一朵。/十块钱一朵玫瑰花很便宜。","Hoa hồng rất rẻ, mười tệ một bông.","Câu vị ngữ tính từ + câu vị ngữ danh từ chỉ giá (十块钱一朵)."]
+]},
+{d:22,title:"模拟试题十二",kind:"Đề thi thử",qs:[
+["什么|找|工作|你打算|毕业后","毕业后你打算找什么工作？/你打算毕业后找什么工作？","Sau khi tốt nghiệp bạn định tìm công việc gì?","Thời gian + 你打算 + 找 + 什么工作. Câu hỏi → “？”."],
+["每天|非常干净|教室|被同学|打扫得|都","教室每天都被同学打扫得非常干净。","Lớp học ngày nào cũng được các bạn quét dọn rất sạch sẽ.","Câu 被 + bổ ngữ trạng thái: 被同学 + 打扫得 + 非常干净."],
+["一家|在经营|一直|汤姆|咖啡店","汤姆一直在经营一家咖啡店。","Tom vẫn luôn kinh doanh một quán cà phê.","一直 + 在 (đang) + V + O."],
+["认为|我|非常|电影|那部|好看","我认为那部电影非常好看。","Tôi cho rằng bộ phim đó rất hay.","认为 + mệnh đề (那部电影非常好看)."],
+["研制了|几个公司|一起|一种|新产品","几个公司一起研制了一种新产品。","Mấy công ty cùng nhau nghiên cứu chế tạo một sản phẩm mới.","S + 一起 + V了 + 一种 + 新产品."],
+["老百姓的|收入|没有|提高|至今","老百姓的收入至今没有提高。","Thu nhập của người dân đến nay vẫn chưa được nâng cao.","Trạng ngữ thời gian 至今 đứng trước 没有 + V."],
+["笑容|终于|露出|他|了","他终于露出了笑容。","Cuối cùng anh ấy đã nở nụ cười.","终于 + V + 了 + O (露出笑容)."],
+["非常的|拥挤|早晚|北京地铁|每天|都","北京地铁每天早晚都非常的拥挤。","Tàu điện ngầm Bắc Kinh ngày nào sáng tối cũng rất đông đúc.","S + thời gian (每天早晚) + 都 + 非常的 + 拥挤."]
+]},
+{d:23,title:"模拟试题十三",kind:"Đề thi thử",qs:[
+["爸爸|鼓励|不要|他|放弃","爸爸鼓励他不要放弃。","Bố khuyến khích anh ấy đừng bỏ cuộc.","Câu kiêm ngữ: A 鼓励 B + 不要 + V."],
+["学校|他|在|当老师|一所","他在一所学校当老师。","Anh ấy làm giáo viên ở một ngôi trường.","在 + nơi chốn + V; 一所 là lượng từ của 学校."],
+["请你|关小点儿|电视的|把|声音","请你把电视的声音关小点儿。","Bạn vặn nhỏ tiếng tivi một chút nhé.","Câu 把: 请你 + 把 + 电视的声音 + 关小点儿."],
+["好机会|抓住了|被|我|这个","这个好机会被我抓住了。","Cơ hội tốt này đã được tôi nắm bắt.","Câu 被: 这个好机会 + 被我 + 抓住了."],
+["对我|这份|工作|有特殊的|意义","这份工作对我有特殊的意义。","Công việc này có ý nghĩa đặc biệt đối với tôi.","A 对 B 有 + 意义 (kết hợp 对…有意义)."],
+["是|中国后|我|来|李老师|认识的","李老师是我来中国后认识的。","Thầy Lý là người tôi quen sau khi đến Trung Quốc.","是…的 nhấn mạnh thời gian: 是 + 我来中国后 + 认识的."],
+["玛丽老师的|首都机场|十点钟|到达|航班|将在|晚上","玛丽老师的航班将在晚上十点钟到达首都机场。","Chuyến bay của cô Mary sẽ đến sân bay Thủ đô lúc 10 giờ tối.","S + 将 + 在 + thời gian + V + nơi chốn."],
+["这件|太脏了|衣服|实在是","这件衣服实在是太脏了。","Bộ quần áo này thật sự quá bẩn.","实在是 + 太 + tính từ + 了."]
+]},
+{d:24,title:"模拟试题十四",kind:"Đề thi thử",qs:[
+["世界上|绝对完美的|东西的|是|没有","世界上是没有绝对完美的东西的。","Trên thế giới không có thứ gì hoàn hảo tuyệt đối.","是…的 nhấn mạnh khẳng định: 世界上 + 是 + 没有… + 的."],
+["什么情况|无论|我们|都要|坚持到底","无论什么情况我们都要坚持到底。","Dù trong hoàn cảnh nào, chúng ta cũng phải kiên trì đến cùng.","无论…都… (bất kể… đều…)."],
+["熟睡中的|窗外的|妹妹|被|嗡嗡声|吵醒了","熟睡中的妹妹被窗外的嗡嗡声吵醒了。","Em gái đang ngủ say bị tiếng vo ve ngoài cửa sổ đánh thức.","Câu 被: 熟睡中的妹妹 + 被 + 窗外的嗡嗡声 + 吵醒了."],
+["汉语|玛丽|水平|他的|比|高","他的汉语水平比玛丽高。","Trình độ tiếng Trung của anh ấy cao hơn Mary.","A 比 B + tính từ."],
+["出租车|我|放在|钱包|上了|把","我把钱包放在出租车上了。","Tôi để quên ví trên taxi rồi.","Câu 把: 把 + 钱包 + 放在 + 出租车上了."],
+["可以|促进|这种新药|营养的|吸收","这种新药可以促进营养的吸收。","Loại thuốc mới này có thể thúc đẩy việc hấp thu dinh dưỡng.","促进 + 吸收 (kết hợp cố định); 营养的 làm định ngữ."],
+["他|根本没|据我所知|把|那件事|放在|心上","据我所知他根本没把那件事放在心上。","Theo tôi được biết, anh ấy hoàn toàn không để tâm đến việc đó.","据我所知 đầu câu; 根本没 + 把 + O + 放在心上."],
+["女孩儿|姐姐是|一位|美丽的|非常","姐姐是一位非常美丽的女孩儿。","Chị gái là một cô gái rất xinh đẹp.","A 是 B; 一位 + 非常美丽的 + 女孩儿."]
+]},
+{d:25,title:"模拟试题十五",kind:"Đề thi thử",qs:[
+["把|请|答案|告诉|大家|你的","请把你的答案告诉大家。","Hãy nói đáp án của bạn cho mọi người.","请 + 把 + O + 告诉 + người nhận."],
+["老师|交给|考试卷子|你|把|一会儿","一会儿你把考试卷子交给老师。/你一会儿把考试卷子交给老师。","Lát nữa bạn nộp bài thi cho thầy nhé.","Thời gian + S + 把 + O + 交给 + 老师."],
+["帽子|被大风|吹飞了|我的","我的帽子被大风吹飞了。","Mũ của tôi bị gió lớn thổi bay mất.","Câu 被: 我的帽子 + 被大风 + 吹飞了."],
+["对|很|京剧|感兴趣|外国人","外国人对京剧很感兴趣。","Người nước ngoài rất hứng thú với Kinh kịch.","A 对 B (很) 感兴趣."],
+["就是|我|通过|网络上的信息|了解|这家公司的","我就是通过网络上的信息了解这家公司的。","Tôi chính là qua thông tin trên mạng mà biết đến công ty này.","是…的 nhấn mạnh phương thức: 就是 + 通过… + 了解 + 这家公司 + 的."],
+["用|他|考上了|勤奋|理想的|自己的|大学","他用自己的勤奋考上了理想的大学。","Anh ấy bằng sự cần cù của mình đã thi đỗ vào trường đại học mơ ước.","用 + phương tiện + V (liên động); 考上了 + 理想的大学."],
+["计算机|离不开|生活|现代","现代生活离不开计算机。","Cuộc sống hiện đại không thể thiếu máy tính.","A 离不开 B (không thể tách rời B)."],
+["都不如|家里|温暖|哪儿","哪儿都不如家里温暖。","Ở đâu cũng không ấm áp bằng ở nhà.","Đại từ nghi vấn 哪儿 + 都 (mọi nơi); A 不如 B + tính từ."]
+]}
+];
+
+
+
+const PTS = 5;
+const strip = s => s.replace(/[，。？！、,.?!“”"'‘’\s]/g, "");
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const LEG_WORK = `<span><i style="background:#fff"></i>Chưa làm</span><span><i style="background:var(--done);border-color:var(--done)"></i>Đã làm</span>`;
+const LEG_DONE = `<span><i style="background:var(--ok);border-color:var(--ok)"></i>Đúng</span><span><i style="background:var(--bad);border-color:var(--bad)"></i>Sai</span>`;
+
+let S = null;
+
+// ---------- left list ----------
+function renderList(){
+  const best = store.get("hsk5-best") || {};
+  const mk = d => {
+    const b = best[d.d];
+    const cls = b==null ? "" : (b>=32 ? "good" : "mid");
+    const mock = d.kind==="Đề thi thử";
+    return `<button class="ditem${S && S.day.d===d.d ? " active":""}" data-day="${d.d}" title="Ngày ${d.d}">
+      <span class="num">${d.d}</span>
+      <span class="txt"><span class="t1 ${mock?"zh":""}">${d.title}</span><span class="t2 zh">第${d.d}天</span></span>
+      ${b!=null ? `<span class="bs ${cls}">${b}/40</span>` : ""}</button>`;
+  };
+  $("listA").innerHTML = DAYS.filter(d=>d.d<=10).map(mk).join("");
+  $("listB").innerHTML = DAYS.filter(d=>d.d>10).map(mk).join("");
+  document.querySelectorAll(".ditem").forEach(c => c.onclick = () => startDay(+c.dataset.day));
+}
+
+// ---------- exam ----------
+let DUR = (store.get("hsk5-dur") || 15);
+function startDay(dn){
+  const day = DAYS.find(d=>d.d===dn);
+  stopTimer();
+  S = { day, graded:false, started:false, mins:DUR,
+        qs: day.qs.map(q => { const tiles=q[0].split("|"); return { tiles, ans:q[1].split("/"), vi:q[2], ex:q[3], placed:[], order:[...tiles.keys()] }; }),
+        start: Date.now() };
+  $("welcome").classList.add("hide"); $("histView").classList.add("hide"); $("histBtn").classList.remove("on"); $("reviewView").classList.add("hide"); $("examArea").classList.remove("hide"); $("right").classList.remove("hide");
+  $("examTitle").innerHTML = `<span class="zh">第${dn}天</span> · ${day.kind==="Đề thi thử" ? '<span class="zh">'+day.title+'</span>' : day.kind}`;
+  $("barSub").textContent = `Ngày ${dn} · ${day.title}`;
+  $("submitBtn").classList.remove("hide"); $("retryBtn").classList.add("hide"); $("nextDayBtn").classList.add("hide");
+  $("scoreBox").classList.add("hide"); $("results").classList.add("hide");
+  $("qlist").classList.remove("hide"); $("exampleCard").classList.remove("hide");
+  $("legend").innerHTML = LEG_WORK;
+  renderDur(); startTimer();
+  renderList();
+  $("qlist").innerHTML = S.qs.map((q,i)=>`
+    <div class="panel qcard" id="q${i}">
+      <div class="qhead"><span class="qno">${91+i}</span><span class="qlabel" id="qs${i}">Chưa làm</span></div>
+      <div class="lbl">Các từ cho sẵn</div>
+      <div class="pool zh" id="pool${i}"></div>
+      <div class="lbl">Câu trả lời</div>
+      <div class="answer zh" id="ans${i}"></div>
+      <div class="qtools"><button class="btn" id="clr${i}">Xóa câu này</button></div>
+    </div>`).join("");
+  S.qs.forEach((q,i)=>{ $("clr"+i).onclick = () => { q.placed=[]; renderQ(i); }; renderQ(i); });
+  renderNav(); renderMini();
+  if(window.innerWidth<=760) $("right").scrollIntoView({behavior:"smooth",block:"start"}); else window.scrollTo(0,0);
+}
+function renderQ(i){
+  const q = S.qs[i], pool = $("pool"+i), ans = $("ans"+i);
+  pool.innerHTML = ""; ans.innerHTML = "";
+  q.order.forEach(k => { if(!q.placed.includes(k)) pool.appendChild(makeTile(i,k)); });
+  q.placed.forEach(k => ans.appendChild(makeTile(i,k)));
+  ans.classList.toggle("empty", q.placed.length===0);
+  const full = q.placed.length===q.tiles.length;
+  $("q"+i).classList.toggle("answered", q.placed.length>0);
+  $("q"+i).classList.toggle("locked", S.graded);
+  $("qs"+i).textContent = q.placed.length===0 ? "Chưa làm" : (full ? "Đã làm" : `Đang làm (${q.placed.length}/${q.tiles.length} từ)`);
+  $("clr"+i).disabled = S.graded || q.placed.length===0;
+  renderNav();
+}
+function renderNav(){
+  const done = S.qs.filter(q=>q.placed.length>0).length;
+  $("nDone").textContent = done; $("nTodo").textContent = 8 - done;
+  $("qnav").innerHTML = S.qs.map((q,i)=>{
+    let c = "qn";
+    if(S.graded) c += q.correct ? " ok" : " bad";
+    else if(q.placed.length) c += " done";
+    return `<button class="${c}" data-i="${i}">${91+i}</button>`;
+  }).join("");
+  $("qnav").querySelectorAll(".qn").forEach(b => b.onclick = () => {
+    const el = document.getElementById((S.graded?"r":"q")+b.dataset.i);
+    if(el) el.scrollIntoView({behavior:"smooth",block:"start"});
+  });
+}
+function makeTile(qi,k){
+  const q = S.qs[qi];
+  const b = document.createElement("div");
+  b.className = "tile"; b.textContent = q.tiles[k];
+  b.setAttribute("role","button"); b.tabIndex = 0;
+  b.addEventListener("pointerdown", e => onDown(e,b,qi,k));
+  b.addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(qi,k); } });
+  return b;
+}
+function toggle(qi,k){
+  if(S.graded) return;
+  const q = S.qs[qi], j = q.placed.indexOf(k);
+  if(j>=0) q.placed.splice(j,1); else q.placed.push(k);
+  renderQ(qi);
+}
+
+// ---------- drag & drop (pointer events: mouse + touch) ----------
+let drag = null;
+function onDown(e,el,qi,k){
+  if(S.graded || e.button>0) return;
+  e.preventDefault();
+  drag = { el, qi, k, x0:e.clientX, y0:e.clientY, moved:false, ghost:null, target:null, idx:null };
+  el.setPointerCapture && el.setPointerCapture(e.pointerId);
+  el.addEventListener("pointermove", onMove);
+  el.addEventListener("pointerup", onUp);
+  el.addEventListener("pointercancel", onCancel);
+}
+function onMove(e){
+  if(!drag) return;
+  if(!drag.moved){
+    if(Math.hypot(e.clientX-drag.x0, e.clientY-drag.y0) < 6) return;
+    drag.moved = true;
+    const g = drag.el.cloneNode(true); g.classList.add("ghost"); document.body.appendChild(g);
+    drag.ghost = g; drag.el.classList.add("dragging");
+  }
+  drag.ghost.style.left = e.clientX+"px"; drag.ghost.style.top = e.clientY+"px";
+  clearHints();
+  const pool = $("pool"+drag.qi), ans = $("ans"+drag.qi);
+  if(inside(ans,e)){ drag.target="answer"; ans.classList.add("hot"); drag.idx = insertIndex(ans,e);
+    const kids = [...ans.querySelectorAll(".tile")].filter(t=>t!==drag.el);
+    if(drag.idx < kids.length) kids[drag.idx].classList.add("ins-before"); else ans.classList.add("ins-end");
+  } else if(inside(pool,e)){ drag.target="pool"; pool.classList.add("hot"); }
+  else drag.target=null;
+}
+function onUp(){
+  if(!drag) return;
+  const d = drag; cleanup();
+  if(!d.moved){ toggle(d.qi,d.k); return; }
+  const q = S.qs[d.qi], cur = q.placed.indexOf(d.k);
+  if(d.target==="answer"){
+    if(cur>=0) q.placed.splice(cur,1);
+    q.placed.splice(Math.min(d.idx, q.placed.length), 0, d.k);
+  } else if(d.target==="pool" && cur>=0){
+    q.placed.splice(cur,1);
+  }
+  renderQ(d.qi);
+}
+function onCancel(){ const qi = drag && drag.qi; cleanup(); if(qi!=null) renderQ(qi); }
+function cleanup(){
+  if(!drag) return;
+  drag.el.removeEventListener("pointermove", onMove);
+  drag.el.removeEventListener("pointerup", onUp);
+  drag.el.removeEventListener("pointercancel", onCancel);
+  if(drag.ghost) drag.ghost.remove();
+  drag.el.classList.remove("dragging");
+  clearHints(); drag = null;
+}
+function clearHints(){
+  document.querySelectorAll(".pool.hot,.answer.hot,.answer.ins-end").forEach(el=>el.classList.remove("hot","ins-end"));
+  document.querySelectorAll(".ins-before").forEach(t=>t.classList.remove("ins-before"));
+}
+function inside(el,e){ const r = el.getBoundingClientRect(); return e.clientX>=r.left-8 && e.clientX<=r.right+8 && e.clientY>=r.top-8 && e.clientY<=r.bottom+8; }
+function insertIndex(ans,e){
+  const kids = [...ans.querySelectorAll(".tile")].filter(t=>t!==drag.el);
+  for(let k=0;k<kids.length;k++){
+    const r = kids[k].getBoundingClientRect();
+    if(e.clientY < r.top) return k;
+    if(e.clientY <= r.bottom && e.clientX < r.left + r.width/2) return k;
+  }
+  return kids.length;
+}
+
+// ---------- timer ----------
+let tHandle = null;
+function startTimer(){ stopTimer(); tick(); tHandle = setInterval(tick, 1000); }
+function stopTimer(){ if(tHandle) clearInterval(tHandle); tHandle = null; }
+function fmt(sec){ const a=Math.abs(sec); return String(Math.floor(a/60)).padStart(2,"0")+":"+String(a%60).padStart(2,"0"); }
+function tick(){
+  const left = S.mins*60 - Math.floor((Date.now()-S.start)/1000);
+  $("timer").textContent = fmt(Math.max(left,0));
+  $("timer").classList.toggle("over", left<=60);
+  $("timerLbl").textContent = "Thời gian còn lại";
+  if(left<=0 && !S.graded){ $("timerLbl").textContent = "Hết giờ!"; doGrade(true); }
+}
+function renderDur(){
+  $("durBox").classList.remove("hide");
+  $("durBox").querySelectorAll("button").forEach(b=>{
+    b.classList.toggle("on", +b.dataset.m===S.mins);
+    b.disabled = S.graded;
+  });
+}
+$("durBox").querySelectorAll("button").forEach(b => b.onclick = () => {
+  if(!S || S.graded) return;
+  DUR = S.mins = +b.dataset.m; store.set("hsk5-dur", DUR);
+  renderDur(); tick();
+});
+
+// ---------- grading ----------
+function submit(){
+  const u = S.qs.filter(q=>q.placed.length===0).length;
+  const inc = S.qs.filter(q=>q.placed.length>0 && q.placed.length<q.tiles.length).length;
+  if(u || inc){
+    const msg = [u?`${u} câu chưa làm`:"", inc?`${inc} câu chưa dùng hết từ`:""].filter(Boolean).join(", ");
+    const box = $("scoreBox"); box.classList.remove("hide");
+    box.innerHTML = `<div class="msg"><b>Bạn còn ${msg}.</b><div>Vẫn nộp bài? Câu chưa hoàn thành sẽ tính 0 điểm.</div></div>
+      <button class="btn" id="cancelSub">Làm tiếp</button><button class="btn primary" id="okSub">Nộp luôn</button>`;
+    $("cancelSub").onclick = () => box.classList.add("hide");
+    $("okSub").onclick = () => doGrade(false);
+    box.scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  doGrade(false);
+}
+function doGrade(timeUp){
+  if(drag) cleanup();
+  S.graded = true; stopTimer();
+  let score = 0;
+  S.qs.forEach(q => {
+    const user = q.placed.map(i=>q.tiles[i]).join("");
+    q.correct = q.placed.length===q.tiles.length && q.ans.some(a=>strip(a)===strip(user));
+    if(q.correct) score += PTS;
+  });
+  const best = store.get("hsk5-best") || {};
+  if(best[S.day.d]==null || score>best[S.day.d]){ best[S.day.d]=score; store.set("hsk5-best", best); }
+
+  const used = Math.min(Math.floor((Date.now()-S.start)/1000), S.mins*60);
+  $("timer").textContent = fmt(used); $("timer").classList.remove("over");
+  $("timerLbl").textContent = timeUp ? "Hết giờ · đã tự nộp bài" : "Thời gian đã làm";
+  renderDur();
+  const nOk = S.qs.filter(q=>q.correct).length;
+  const msg = score===40 ? "Xuất sắc! Đúng tất cả 8 câu." : score>=32 ? "Rất tốt! Xem lại các câu sai bên dưới." : score>=20 ? "Khá ổn. Hãy đọc kỹ phần giải thích các câu sai." : "Cần ôn thêm. Đọc giải thích rồi làm lại đề này nhé.";
+  const box = $("scoreBox"); box.classList.remove("hide");
+  box.innerHTML = `<div class="big">${score}<small>/40</small></div>
+    <div class="msg"><b>${timeUp ? "Hết giờ – bài đã được tự động nộp. " : ""}${msg}</b><div>Đúng ${nOk}/8 câu · Thời gian làm bài ${Math.floor(used/60)} phút ${used%60} giây (giới hạn ${S.mins} phút)</div></div>`;
+
+  saveAttempt({ day:S.day.d, t:Date.now(), correct:nOk, score, sec:used, limit:S.mins, auto:!!timeUp, a:S.qs.map(q=>q.placed.slice()) });
+  renderMini();
+  $("qlist").classList.add("hide"); $("exampleCard").classList.add("hide");
+  const res = $("results"); res.classList.remove("hide");
+  res.innerHTML = cardsHTML(S.qs);
+
+  $("submitBtn").classList.add("hide"); $("retryBtn").classList.remove("hide");
+  $("nextDayBtn").classList.toggle("hide", !DAYS.find(d=>d.d===S.day.d+1));
+  $("legend").innerHTML = LEG_DONE;
+  renderNav(); renderList();
+  $("scoreBox").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function cardsHTML(qs){
+  return qs.map((q,i)=>{
+    const main = q.ans[0], alts = q.ans.slice(1);
+    const userTxt = q.placed.length ? q.placed.map(k=>q.tiles[k]).join(" ") : "(chưa làm)";
+    return `<div class="panel rcard ${q.correct?"ok":"bad"}" id="r${i}">
+      <div class="rtop"><span class="qno">${91+i}</span>
+        <span class="pill ${q.correct?"ok":"bad"}">${q.correct?"Đúng · +5 điểm":"Sai · 0 điểm"}</span></div>
+      <div class="rrow">
+        <span class="k">Từ cho sẵn</span><span class="v zh" style="font-size:16px;color:var(--muted)">${q.tiles.join("　")}</span>
+        <span class="k">Bạn trả lời</span><span class="v zh ${q.correct?"correct":"user-bad"}">${userTxt}</span>
+        <span class="k">Đáp án</span><span class="v zh correct">${main}${alts.length?`<div class="alt">Cũng chấp nhận: <span class="zh">${alts.join("　")}</span></div>`:""}</span>
+        <span class="k">Dịch nghĩa</span><span class="v">${q.vi}</span>
+      </div>
+      <div class="expl"><b>Giải thích:</b> ${q.ex}</div>
+    </div>`;
+  }).join("");
+}
+
+// ---------- history ----------
+const HKEY = "hsk5-history";
+function getHist(){ const h = store.get(HKEY); return Array.isArray(h) ? h : []; }
+function saveAttempt(a){ const h = getHist(); h.push(a); store.set(HKEY, h); }
+function dayLabel(dn){ const d = DAYS.find(x=>x.d===dn); return `Ngày ${dn} · ${d ? d.title : ""}`; }
+function fmtDate(t){ const d = new Date(t); const p = n => String(n).padStart(2,"0");
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function fmtDur(sec){ return `${Math.floor(sec/60)} phút ${String(sec%60).padStart(2,"0")} giây`; }
+function scCls(s){ return s>=32 ? "good" : (s>=20 ? "mid" : "low"); }
+function hms(sec){ return `${Math.floor(sec/3600)}:${String(Math.floor(sec%3600/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`; }
+function numberedHist(){ const c = {}; return getHist().map((a,idx) => ({...a, idx, n: (c[a.day] = (c[a.day]||0)+1)})); }
+function rowsFor(list, showDay){
+  const keep = new Set(list.map(a=>a.t+"_"+a.day));
+  const rows = numberedHist().filter(a=>keep.has(a.t+"_"+a.day)).reverse();
+  const d = new Date(), p = n => String(n).padStart(2,"0");
+  return `<div class="tblwrap" style="border:none"><table class="rt"><thead><tr>
+    <th>Ngày làm</th><th>Kết quả</th><th>Thời gian làm bài</th><th></th></tr></thead><tbody>
+    ${rows.map(a=>{
+      const day = DAYS.find(x=>x.d===a.day), mock = day && day.kind==="Đề thi thử";
+      const dt = new Date(a.t);
+      return `<tr>
+        <td><div class="when">${p(dt.getDate())}/${p(dt.getMonth()+1)}/${dt.getFullYear()}<small>${p(dt.getHours())}:${p(dt.getMinutes())}</small></div>
+          <div class="tags">${showDay?`<span class="tag n">Ngày ${a.day}</span>`:""}<span class="tag ${mock?"mock":""}">${mock?"Đề thi thử":"Luyện tập"}</span><span class="tag">Sắp xếp câu</span><span class="tag n">Lần ${a.n}</span>${a.auto?'<span class="tag auto">Hết giờ</span>':""}</div></td>
+        <td class="res"><b>${a.correct}/8</b><small>${a.score}/40 điểm</small></td>
+        <td>${hms(a.sec)}<div class="muted">Giới hạn ${a.limit} phút</div></td>
+        <td>${a.a ? `<a class="detail" data-idx="${a.idx}">Xem chi tiết</a>` : '<span class="muted">Không có chi tiết</span>'}</td>
+      </tr>`; }).join("")}
+    </tbody></table></div>`;
+}
+function wireDetail(root){ root.querySelectorAll("a.detail").forEach(el => el.onclick = () => showReview(+el.dataset.idx)); }
+function showReview(idx){
+  const a = getHist()[idx]; if(!a || !a.a) return;
+  const day = DAYS.find(x=>x.d===a.day);
+  const qs = day.qs.map((q,i)=>{ const tiles=q[0].split("|"), ans=q[1].split("/"), placed=a.a[i]||[];
+    const user = placed.map(k=>tiles[k]).join("");
+    return { tiles, ans, vi:q[2], ex:q[3], placed, correct: placed.length===tiles.length && ans.some(x=>strip(x)===strip(user)) }; });
+  const n = numberedHist()[idx].n;
+  const from = S ? S.day.d : null;
+  stopTimer(); S = null;
+  ["welcome","examArea","right","histView"].forEach(id=>$(id).classList.add("hide"));
+  $("reviewView").classList.remove("hide");
+  $("reviewHead").innerHTML = `<button class="btn backbtn" id="revBack">← Quay lại</button>
+    <h3>Chi tiết bài làm · ${dayLabel(a.day)} · Lần ${n}</h3><div class="muted-s">Nộp lúc ${fmtDate(a.t)} · Thời gian làm bài ${hms(a.sec)} (giới hạn ${a.limit} phút)${a.auto?" · hết giờ tự nộp":""}</div>`;
+  $("reviewScore").innerHTML = `<div class="big">${a.score}<small>/40</small></div><div class="msg"><b>Đúng ${a.correct}/8 câu</b><div>Câu sai được gạch đỏ, kèm đáp án và giải thích.</div></div>
+    <button class="btn primary" id="revRetry">Làm lại đề này</button>`;
+  $("reviewCards").innerHTML = cardsHTML(qs);
+  $("revBack").onclick = () => from ? startDay(from) : showHistory();
+  $("revRetry").onclick = () => startDay(a.day);
+  $("barSub").textContent = `Chi tiết bài làm · Ngày ${a.day}`;
+  renderList(); window.scrollTo(0,0);
+}
+function renderHistory(){
+  const h = getHist(), f = $("hFilter").value;
+  const list = f==="all" ? h : h.filter(a=>a.day===+f);
+  const n = list.length;
+  const avg = n ? (list.reduce((s,a)=>s+a.score,0)/n) : 0;
+  const best = n ? Math.max(...list.map(a=>a.score)) : 0;
+  const avgT = n ? Math.round(list.reduce((s,a)=>s+a.sec,0)/n) : 0;
+  $("hSum").innerHTML = `<div><b>${n}</b><span>Số lần làm</span></div><div><b>${n?avg.toFixed(1):"–"}</b><span>Điểm trung bình</span></div>
+    <div><b>${n?best+"/40":"–"}</b><span>Điểm cao nhất</span></div><div><b>${n?Math.floor(avgT/60)+"′"+String(avgT%60).padStart(2,"0")+"″":"–"}</b><span>Thời gian TB</span></div>`;
+  $("hTable").innerHTML = n ? rowsFor(list, f==="all") : `<div class="hempty">Chưa có lần làm nào${f==="all"?"":" cho đề này"}. Chọn một đề ở cột trái để bắt đầu.</div>`;
+  wireDetail($("hTable"));
+}
+function showHistory(){
+  stopTimer(); S = null;
+  const h = getHist(); const days = [...new Set(h.map(a=>a.day))].sort((a,b)=>a-b);
+  const prev = $("hFilter").value;
+  $("hFilter").innerHTML = `<option value="all">Tất cả các đề</option>` + days.map(d=>`<option value="${d}">${dayLabel(d)}</option>`).join("");
+  if([...$("hFilter").options].some(o=>o.value===prev)) $("hFilter").value = prev;
+  $("welcome").classList.add("hide"); $("examArea").classList.add("hide"); $("right").classList.add("hide"); $("reviewView").classList.add("hide");
+  $("histView").classList.remove("hide"); $("histBtn").classList.add("on");
+  $("barSub").textContent = "Bảng kết quả";
+  renderList(); renderHistory(); window.scrollTo(0,0);
+}
+function renderMini(){
+  const list = getHist().filter(a=>a.day===S.day.d);
+  const box = $("miniHist");
+  if(!list.length){ box.classList.add("hide"); return; }
+  box.classList.remove("hide");
+  box.innerHTML = `<h3>Kết quả làm bài của bạn <span class="muted-s" style="font-weight:400">· đã làm ${list.length} lần</span></h3>` + rowsFor(list, false);
+  wireDetail(box);
+}
+$("histBtn").onclick = showHistory;
+$("hFilter").onchange = renderHistory;
+$("hClear").onclick = () => {
+  const b = $("hClear");
+  if(b.dataset.armed){ store.set(HKEY, []); store.set("hsk5-best", {}); delete b.dataset.armed; b.textContent = "Xóa lịch sử"; showHistory(); return; }
+  b.dataset.armed = "1"; b.textContent = "Bấm lần nữa để xóa hết";
+  setTimeout(()=>{ if(b.dataset.armed){ delete b.dataset.armed; b.textContent = "Xóa lịch sử"; } }, 4000);
+};
+$("hCsv").onclick = () => {
+  const counter = {};
+  const lines = [["Đề","Lần","Thời điểm nộp","Số câu đúng (/8)","Điểm (/40)","Thời gian làm (giây)","Thời gian làm","Giới hạn (phút)","Hết giờ tự nộp"]];
+  getHist().forEach(a => { counter[a.day]=(counter[a.day]||0)+1;
+    lines.push([dayLabel(a.day), counter[a.day], fmtDate(a.t), a.correct, a.score, a.sec, fmtDur(a.sec), a.limit, a.auto?"Có":"Không"]); });
+  const csv = "\ufeff" + lines.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  const a = document.createElement("a"); a.href = url; a.download = "ket-qua-hsk5-sap-xep-cau.csv";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
+};
+
+// ---------- wiring ----------
+$("submitBtn").onclick = submit;
+$("retryBtn").onclick = () => startDay(S.day.d);
+$("nextDayBtn").onclick = () => startDay(S.day.d+1);
+renderList();
+</script>
+
+</body>
+</html>
