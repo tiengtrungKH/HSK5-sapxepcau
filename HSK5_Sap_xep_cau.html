@@ -47,6 +47,28 @@ button{font:inherit;color:inherit;cursor:pointer}
 .bar{background:linear-gradient(90deg,#ffc2cc 0%,#ffb59a 100%);color:#5a2a22;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(240,138,108,.18)}
 .bar-in{max-width:1440px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
 .bar h1{font-size:17px;margin:0;font-weight:800}
+.brand{display:flex;align-items:center;gap:10px;flex:none}
+.brand img{width:44px;height:44px;border-radius:12px;background:#f9f6ef;box-shadow:0 1px 4px rgba(150,60,50,.18);display:block}
+.brand span{font-weight:800;font-size:19px;color:#8f2f3a;letter-spacing:.2px;white-space:nowrap}
+.stu{margin-left:auto;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.55);border:1px solid rgba(143,47,58,.2);border-radius:999px;padding:5px 6px 5px 12px;font-size:14.5px;color:#5a2a22;max-width:46vw}
+.stu{min-width:0}
+.stu b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.stu button{border:none;background:#e8673f;color:#fff;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700;white-space:nowrap}
+.stu.empty b{color:#a0524a;font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(74,44,42,.45);display:grid;place-items:center;z-index:200;padding:16px}
+.modal-box{background:var(--panel);border-radius:18px;padding:24px;width:min(440px,100%);box-shadow:0 20px 50px rgba(0,0,0,.25);border:1px solid var(--line)}
+.modal-box h2{margin:0 0 4px;font-size:21px}
+.modal-box p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.modal-box input{width:100%;font:inherit;font-size:17px;padding:11px 14px;border-radius:12px;border:1.5px solid var(--zone-border);background:var(--zone);color:var(--ink)}
+.modal-box input:focus{outline:none;border-color:var(--brand-deep);background:var(--panel)}
+.modal-box .err{color:var(--bad);font-size:13px;min-height:18px;margin-top:6px}
+.modal-box .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.known{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.known button{border:1px solid var(--line);background:var(--pink-soft);border-radius:999px;padding:3px 10px;font-size:13px}
+.who{font-size:13.5px;color:var(--muted);margin:-4px 6px 10px}
+.who b{color:var(--ink)}
+.bar-sep{width:1px;align-self:stretch;background:rgba(143,47,58,.25);margin:2px 4px}
+@media (max-width:760px){.stu{font-size:13px;padding:3px 4px 3px 9px;max-width:52vw}.stu b{max-width:110px}.stu .lbl-s{display:none}.brand img{width:36px;height:36px}.brand span{font-size:16px}.bar-sep{display:none}.bar h1{font-size:14px}.bar-title{display:none}}
 .bar .sub{font-size:13px;opacity:.8}
 .btn{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:10px;font-size:15px}
 .btn:hover{border-color:var(--brand)}
@@ -245,10 +267,13 @@ table.rt{border-collapse:collapse;width:100%;font-size:15.5px;min-width:520px}
 <body>
 <header class="bar">
   <div class="bar-in">
-    <div>
+    <div class="brand"><img src="data:image/png;base64,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" alt="Logo KH Chinese" width="44" height="44"><span>Tiếng Trung KH</span></div>
+    <div class="bar-sep"></div>
+    <div class="bar-title">
       <h1 class="zh">HSK（五级）书写 · 完成句子</h1>
       <div class="sub" id="barSub">25天攻克新HSK5级写作 — 25 đề · 200 câu sắp xếp</div>
     </div>
+    <div class="stu" id="stuChip"><span class="lbl-s">👤 Học sinh:</span><b id="stuName">Chưa nhập tên</b><button id="stuBtn">Nhập tên</button></div>
   </div>
 </header>
 
@@ -275,6 +300,7 @@ table.rt{border-collapse:collapse;width:100%;font-size:15.5px;min-width:520px}
       <h2>Bảng kết quả</h2>
       <p class="note">Mỗi lần nộp bài được lưu lại trên trình duyệt của máy này.</p>
       <div class="htools">
+        <select id="hStu" aria-label="Lọc theo học sinh"></select>
         <select id="hFilter" aria-label="Lọc theo đề"></select>
         <span class="sp"></span>
         <button class="btn" id="hCsv">⬇ Tải CSV</button>
@@ -306,6 +332,7 @@ table.rt{border-collapse:collapse;width:100%;font-size:15.5px;min-width:520px}
   <!-- RIGHT: status -->
   <aside class="panel right hide" id="right">
     <h3 id="examTitle"></h3>
+    <div class="who" id="whoLine"></div>
     <div class="timerbox">
       <div class="k" id="timerLbl">Thời gian còn lại</div>
       <div class="timer" id="timer">15:00</div>
@@ -323,6 +350,17 @@ table.rt{border-collapse:collapse;width:100%;font-size:15.5px;min-width:520px}
     <button class="btn hide" id="retryBtn">↻ Làm lại đề này</button>
     <button class="btn hide" id="nextDayBtn">Đề tiếp theo →</button>
   </aside>
+</div>
+
+<div class="modal hide" id="nameModal" role="dialog" aria-modal="true" aria-labelledby="nmTitle">
+  <div class="modal-box">
+    <h2 id="nmTitle">Họ tên học sinh</h2>
+    <p id="nmHint">Nhập họ tên trước khi làm bài. Tên sẽ được lưu cùng kết quả mỗi lần nộp bài.</p>
+    <input id="nmInput" type="text" maxlength="60" placeholder="Ví dụ: Nguyễn Thị Lan" autocomplete="name">
+    <div class="known" id="nmKnown"></div>
+    <div class="err" id="nmErr"></div>
+    <div class="row"><button class="btn" id="nmCancel">Hủy</button><button class="btn primary" id="nmOk">Bắt đầu</button></div>
+  </div>
 </div>
 
 <script>
@@ -596,7 +634,7 @@ let S = null;
 
 // ---------- left list ----------
 function renderList(){
-  const best = store.get("hsk5-best") || {};
+  const best = bestFor(STU);
   const mk = d => {
     const b = best[d.d];
     const cls = b==null ? "" : (b>=32 ? "good" : "mid");
@@ -614,6 +652,7 @@ function renderList(){
 // ---------- exam ----------
 let DUR = (store.get("hsk5-dur") || 15);
 function startDay(dn){
+  if(!STU){ askName(() => startDay(dn)); return; }
   const day = DAYS.find(d=>d.d===dn);
   stopTimer();
   S = { day, graded:false, started:false, mins:DUR,
@@ -622,6 +661,7 @@ function startDay(dn){
   $("welcome").classList.add("hide"); $("histView").classList.add("hide"); $("histBtn").classList.remove("on"); $("reviewView").classList.add("hide"); $("examArea").classList.remove("hide"); $("right").classList.remove("hide");
   $("examTitle").innerHTML = `<span class="zh">第${dn}天</span> · ${day.kind==="Đề thi thử" ? '<span class="zh">'+day.title+'</span>' : day.kind}`;
   $("barSub").textContent = `Ngày ${dn} · ${day.title}`;
+  $("whoLine").innerHTML = `Học sinh: <b>${esc(STU)}</b>`;
   $("submitBtn").classList.remove("hide"); $("retryBtn").classList.add("hide"); $("nextDayBtn").classList.add("hide");
   $("scoreBox").classList.add("hide"); $("results").classList.add("hide");
   $("qlist").classList.remove("hide"); $("exampleCard").classList.remove("hide");
@@ -800,8 +840,6 @@ function doGrade(timeUp){
     q.correct = q.placed.length===q.tiles.length && q.ans.some(a=>strip(a)===strip(user));
     if(q.correct) score += PTS;
   });
-  const best = store.get("hsk5-best") || {};
-  if(best[S.day.d]==null || score>best[S.day.d]){ best[S.day.d]=score; store.set("hsk5-best", best); }
 
   const used = Math.min(Math.floor((Date.now()-S.start)/1000), S.mins*60);
   $("timer").textContent = fmt(used); $("timer").classList.remove("over");
@@ -811,9 +849,9 @@ function doGrade(timeUp){
   const msg = score===40 ? "Xuất sắc! Đúng tất cả 8 câu." : score>=32 ? "Rất tốt! Xem lại các câu sai bên dưới." : score>=20 ? "Khá ổn. Hãy đọc kỹ phần giải thích các câu sai." : "Cần ôn thêm. Đọc giải thích rồi làm lại đề này nhé.";
   const box = $("scoreBox"); box.classList.remove("hide");
   box.innerHTML = `<div class="big">${score}<small>/40</small></div>
-    <div class="msg"><b>${timeUp ? "Hết giờ – bài đã được tự động nộp. " : ""}${msg}</b><div>Đúng ${nOk}/8 câu · Thời gian làm bài ${Math.floor(used/60)} phút ${used%60} giây (giới hạn ${S.mins} phút)</div></div>`;
+    <div class="msg"><b>${timeUp ? "Hết giờ – bài đã được tự động nộp. " : ""}${msg}</b><div>Học sinh: <b>${esc(STU)}</b> · Đúng ${nOk}/8 câu · Thời gian làm bài ${Math.floor(used/60)} phút ${used%60} giây (giới hạn ${S.mins} phút)</div></div>`;
 
-  saveAttempt({ day:S.day.d, t:Date.now(), correct:nOk, score, sec:used, limit:S.mins, auto:!!timeUp, a:S.qs.map(q=>q.placed.slice()) });
+  saveAttempt({ name:STU, day:S.day.d, t:Date.now(), correct:nOk, score, sec:used, limit:S.mins, auto:!!timeUp, a:S.qs.map(q=>q.placed.slice()) });
   renderMini();
   $("qlist").classList.add("hide"); $("exampleCard").classList.add("hide");
   const res = $("results"); res.classList.remove("hide");
@@ -854,8 +892,8 @@ function fmtDate(t){ const d = new Date(t); const p = n => String(n).padStart(2,
 function fmtDur(sec){ return `${Math.floor(sec/60)} phút ${String(sec%60).padStart(2,"0")} giây`; }
 function scCls(s){ return s>=32 ? "good" : (s>=20 ? "mid" : "low"); }
 function hms(sec){ return `${Math.floor(sec/3600)}:${String(Math.floor(sec%3600/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`; }
-function numberedHist(){ const c = {}; return getHist().map((a,idx) => ({...a, idx, n: (c[a.day] = (c[a.day]||0)+1)})); }
-function rowsFor(list, showDay){
+function numberedHist(){ const c = {}; return getHist().map((a,idx) => { const k = (a.name||"")+"|"+a.day; return {...a, idx, n: (c[k] = (c[k]||0)+1)}; }); }
+function rowsFor(list, showDay, showName){
   const keep = new Set(list.map(a=>a.t+"_"+a.day));
   const rows = numberedHist().filter(a=>keep.has(a.t+"_"+a.day)).reverse();
   const d = new Date(), p = n => String(n).padStart(2,"0");
@@ -866,7 +904,7 @@ function rowsFor(list, showDay){
       const dt = new Date(a.t);
       return `<tr>
         <td><div class="when">${p(dt.getDate())}/${p(dt.getMonth()+1)}/${dt.getFullYear()}<small>${p(dt.getHours())}:${p(dt.getMinutes())}</small></div>
-          <div class="tags">${showDay?`<span class="tag n">Ngày ${a.day}</span>`:""}<span class="tag ${mock?"mock":""}">${mock?"Đề thi thử":"Luyện tập"}</span><span class="tag">Sắp xếp câu</span><span class="tag n">Lần ${a.n}</span>${a.auto?'<span class="tag auto">Hết giờ</span>':""}</div></td>
+          <div class="tags">${showName?`<span class="tag mock">👤 ${esc(a.name||"(không tên)")}</span>`:""}${showDay?`<span class="tag n">Ngày ${a.day}</span>`:""}<span class="tag ${mock?"mock":""}">${mock?"Đề thi thử":"Luyện tập"}</span><span class="tag">Sắp xếp câu</span><span class="tag n">Lần ${a.n}</span>${a.auto?'<span class="tag auto">Hết giờ</span>':""}</div></td>
         <td class="res"><b>${a.correct}/8</b><small>${a.score}/40 điểm</small></td>
         <td>${hms(a.sec)}<div class="muted">Giới hạn ${a.limit} phút</div></td>
         <td>${a.a ? `<a class="detail" data-idx="${a.idx}">Xem chi tiết</a>` : '<span class="muted">Không có chi tiết</span>'}</td>
@@ -886,7 +924,7 @@ function showReview(idx){
   ["welcome","examArea","right","histView"].forEach(id=>$(id).classList.add("hide"));
   $("reviewView").classList.remove("hide");
   $("reviewHead").innerHTML = `<button class="btn backbtn" id="revBack">← Quay lại</button>
-    <h3>Chi tiết bài làm · ${dayLabel(a.day)} · Lần ${n}</h3><div class="muted-s">Nộp lúc ${fmtDate(a.t)} · Thời gian làm bài ${hms(a.sec)} (giới hạn ${a.limit} phút)${a.auto?" · hết giờ tự nộp":""}</div>`;
+    <h3>Chi tiết bài làm · ${dayLabel(a.day)} · Lần ${n}</h3><div class="muted-s">Học sinh: <b>${esc(a.name||"(không tên)")}</b> · Nộp lúc ${fmtDate(a.t)} · Thời gian làm bài ${hms(a.sec)} (giới hạn ${a.limit} phút)${a.auto?" · hết giờ tự nộp":""}</div>`;
   $("reviewScore").innerHTML = `<div class="big">${a.score}<small>/40</small></div><div class="msg"><b>Đúng ${a.correct}/8 câu</b><div>Câu sai được gạch đỏ, kèm đáp án và giải thích.</div></div>
     <button class="btn primary" id="revRetry">Làm lại đề này</button>`;
   $("reviewCards").innerHTML = cardsHTML(qs);
@@ -896,7 +934,8 @@ function showReview(idx){
   renderList(); window.scrollTo(0,0);
 }
 function renderHistory(){
-  const h = getHist(), f = $("hFilter").value;
+  const st = $("hStu").value, f = $("hFilter").value;
+  const h = getHist().filter(a => st==="__all" || (a.name||"")===st);
   const list = f==="all" ? h : h.filter(a=>a.day===+f);
   const n = list.length;
   const avg = n ? (list.reduce((s,a)=>s+a.score,0)/n) : 0;
@@ -904,12 +943,16 @@ function renderHistory(){
   const avgT = n ? Math.round(list.reduce((s,a)=>s+a.sec,0)/n) : 0;
   $("hSum").innerHTML = `<div><b>${n}</b><span>Số lần làm</span></div><div><b>${n?avg.toFixed(1):"–"}</b><span>Điểm trung bình</span></div>
     <div><b>${n?best+"/40":"–"}</b><span>Điểm cao nhất</span></div><div><b>${n?Math.floor(avgT/60)+"′"+String(avgT%60).padStart(2,"0")+"″":"–"}</b><span>Thời gian TB</span></div>`;
-  $("hTable").innerHTML = n ? rowsFor(list, f==="all") : `<div class="hempty">Chưa có lần làm nào${f==="all"?"":" cho đề này"}. Chọn một đề ở cột trái để bắt đầu.</div>`;
+  $("hTable").innerHTML = n ? rowsFor(list, f==="all", st==="__all") : `<div class="hempty">Chưa có lần làm nào${f==="all"?"":" cho đề này"}. Chọn một đề ở cột trái để bắt đầu.</div>`;
   wireDetail($("hTable"));
 }
 function showHistory(){
   stopTimer(); S = null;
   const h = getHist(); const days = [...new Set(h.map(a=>a.day))].sort((a,b)=>a-b);
+  const names = [...new Set(h.map(a=>a.name||""))].sort((a,b)=>a.localeCompare(b,"vi"));
+  const prevS = $("hStu").value;
+  $("hStu").innerHTML = `<option value="__all">Tất cả học sinh</option>` + names.map(n=>`<option value="${esc(n)}">${esc(n||"(không tên)")}</option>`).join("");
+  $("hStu").value = [...$("hStu").options].some(o=>o.value===prevS) ? prevS : (names.includes(STU) ? STU : "__all");
   const prev = $("hFilter").value;
   $("hFilter").innerHTML = `<option value="all">Tất cả các đề</option>` + days.map(d=>`<option value="${d}">${dayLabel(d)}</option>`).join("");
   if([...$("hFilter").options].some(o=>o.value===prev)) $("hFilter").value = prev;
@@ -919,7 +962,7 @@ function showHistory(){
   renderList(); renderHistory(); window.scrollTo(0,0);
 }
 function renderMini(){
-  const list = getHist().filter(a=>a.day===S.day.d);
+  const list = getHist().filter(a=>a.day===S.day.d && (a.name||"")===STU);
   const box = $("miniHist");
   if(!list.length){ box.classList.add("hide"); return; }
   box.classList.remove("hide");
@@ -928,22 +971,63 @@ function renderMini(){
 }
 $("histBtn").onclick = showHistory;
 $("hFilter").onchange = renderHistory;
+$("hStu").onchange = renderHistory;
 $("hClear").onclick = () => {
   const b = $("hClear");
-  if(b.dataset.armed){ store.set(HKEY, []); store.set("hsk5-best", {}); delete b.dataset.armed; b.textContent = "Xóa lịch sử"; showHistory(); return; }
+  if(b.dataset.armed){ store.set(HKEY, []); delete b.dataset.armed; b.textContent = "Xóa lịch sử"; showHistory(); return; }
   b.dataset.armed = "1"; b.textContent = "Bấm lần nữa để xóa hết";
   setTimeout(()=>{ if(b.dataset.armed){ delete b.dataset.armed; b.textContent = "Xóa lịch sử"; } }, 4000);
 };
 $("hCsv").onclick = () => {
   const counter = {};
-  const lines = [["Đề","Lần","Thời điểm nộp","Số câu đúng (/8)","Điểm (/40)","Thời gian làm (giây)","Thời gian làm","Giới hạn (phút)","Hết giờ tự nộp"]];
-  getHist().forEach(a => { counter[a.day]=(counter[a.day]||0)+1;
-    lines.push([dayLabel(a.day), counter[a.day], fmtDate(a.t), a.correct, a.score, a.sec, fmtDur(a.sec), a.limit, a.auto?"Có":"Không"]); });
+  const lines = [["Học sinh","Đề","Lần","Thời điểm nộp","Số câu đúng (/8)","Điểm (/40)","Thời gian làm (giây)","Thời gian làm","Giới hạn (phút)","Hết giờ tự nộp"]];
+  getHist().forEach(a => { const k=(a.name||"")+"|"+a.day; counter[k]=(counter[k]||0)+1;
+    lines.push([a.name||"", dayLabel(a.day), counter[k], fmtDate(a.t), a.correct, a.score, a.sec, fmtDur(a.sec), a.limit, a.auto?"Có":"Không"]); });
   const csv = "\ufeff" + lines.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   const url = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
   const a = document.createElement("a"); a.href = url; a.download = "ket-qua-hsk5-sap-xep-cau.csv";
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
 };
+
+// ---------- student name ----------
+let STU = (store.get("hsk5-student") || "").trim();
+function esc(t){ return String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function bestFor(name){
+  const b = {}; getHist().forEach(a => { if((a.name||"")===name && (b[a.day]==null || a.score>b[a.day])) b[a.day]=a.score; }); return b;
+}
+function renderStu(){
+  $("stuName").textContent = STU || "Chưa nhập tên";
+  $("stuChip").classList.toggle("empty", !STU);
+  $("stuBtn").textContent = STU ? "Đổi tên" : "Nhập tên";
+}
+let afterName = null;
+function askName(cb){
+  afterName = cb || null;
+  const m = $("nameModal"); m.classList.remove("hide");
+  $("nmTitle").textContent = STU ? "Đổi tên học sinh" : "Họ tên học sinh";
+  $("nmOk").textContent = cb ? "Bắt đầu" : "Lưu";
+  $("nmInput").value = STU; $("nmErr").textContent = "";
+  const names = [...new Set(getHist().map(a=>a.name).filter(Boolean))].filter(n=>n!==STU).slice(-8);
+  $("nmKnown").innerHTML = names.length ? `<span class="muted-s" style="width:100%">Học sinh đã làm trên máy này:</span>` + names.map(n=>`<button data-n="${esc(n)}">${esc(n)}</button>`).join("") : "";
+  $("nmKnown").querySelectorAll("button").forEach(b => b.onclick = () => { $("nmInput").value = b.dataset.n; $("nmInput").focus(); });
+  setTimeout(()=>$("nmInput").focus(), 30);
+}
+function saveName(){
+  const v = $("nmInput").value.replace(/\s+/g," ").trim();
+  if(v.length < 2){ $("nmErr").textContent = "Vui lòng nhập họ tên (ít nhất 2 ký tự)."; $("nmInput").focus(); return; }
+  STU = v; store.set("hsk5-student", STU); renderStu();
+  $("nameModal").classList.add("hide");
+  if(S && !S.graded) $("whoLine").innerHTML = `Học sinh: <b>${esc(STU)}</b>`;
+  const cb = afterName; afterName = null;
+  if(cb) cb();
+  else if(!$("histView").classList.contains("hide")) showHistory();
+  else { renderList(); if(S) renderMini(); }
+}
+$("stuBtn").onclick = () => askName(null);
+$("nmOk").onclick = saveName;
+$("nmCancel").onclick = () => { $("nameModal").classList.add("hide"); afterName = null; };
+$("nmInput").addEventListener("keydown", e => { if(e.key==="Enter") saveName(); if(e.key==="Escape") $("nmCancel").click(); });
+renderStu();
 
 // ---------- wiring ----------
 $("submitBtn").onclick = submit;
